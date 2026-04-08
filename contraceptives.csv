@@ -1,0 +1,31 @@
+name,description,effectiveness,advantages,disadvantages,side_effects,suitability
+Implant,Small rod placed under skin,>99%,Long term protection,Requires procedure,Irregular bleeding,Women seeking long term contraception
+Copper IUD,Device placed in uterus,>99%,Hormone free,Insertion discomfort,Cramping,Women wanting non hormonal methods
+Pills,Daily hormonal tablet,91-99%,Regulates cycle,Must take daily,Nausea headaches,Women comfortable with daily medication
+Progestin-only Pill,Hormonal pill without estrogen,91-99%,Suitable for breastfeeding mothers,Strict timing needed,Irregular bleeding,Breastfeeding women
+Copper IUD,Non-hormonal device placed in uterus,>99%,Long-term hormone free,Insertion procedure,Cramping heavy periods,Women wanting long-term contraception
+Hormonal IUD,Hormonal device inserted into uterus,>99%,Long-term reduces bleeding,Requires procedure,Spotting headaches,Women wanting long-term birth control
+Implant,Small rod placed under skin of arm,>99%,Long-term very effective,Requires minor surgery,Irregular bleeding headaches,Women wanting long-term contraception
+Injectable Contraceptive,Hormonal injection every 3 months,94-99%,Convenient quarterly dosing,Delayed fertility return,Weight gain irregular bleeding,Women preferring infrequent dosing
+Contraceptive Patch,Patch worn on skin releasing hormones,91-99%,Weekly replacement easy use,Skin irritation risk,Headache nausea,Women wanting weekly contraception
+Vaginal Ring,Flexible ring inserted in vagina monthly,91-99%,Monthly replacement convenient,Must be inserted correctly,Discharge headaches,Women comfortable with vaginal device
+Diaphragm,Dome-shaped barrier inserted before sex,88-94%,Reusable non-hormonal,Requires spermicide,Urinary infection risk,Women avoiding hormones
+Cervical Cap,Small cup covering cervix,71-86%,Reusable non-hormonal,Lower effectiveness if childbirth occurred,Irritation infection,Women avoiding hormones
+Sponge,Spermicide sponge inserted before sex,76-88%,No prescription needed,Single-use only,Irritation dryness,Occasional contraception users
+Fertility Awareness Method,Tracking cycle to avoid fertile days,76-88%,No medical side effects,Requires careful tracking,None,Natural family planning users
+Withdrawal Method,Penis withdrawn before ejaculation,78%,No cost easily accessible,High failure risk,None,Couples without access to contraception
+Emergency Contraceptive Pill,Hormonal pill taken after unprotected sex,58-95%,Prevents pregnancy after intercourse,Time sensitive,Nausea fatigue,Emergency contraception use
+Copper IUD Emergency Use,Copper IUD used within 5 days after sex,>99%,Most effective emergency method,Requires clinic insertion,Cramping,Emergency contraception
+Sterilization Female,Surgical tubal ligation,>99%,Permanent contraception,Irreversible surgery,Post-surgery pain,Women who completed family
+Sterilization Male,Vasectomy surgery for men,>99%,Permanent simple procedure,Requires minor surgery,Swelling discomfort,Men who completed family
+Lactational Amenorrhea Method,Breastfeeding suppresses ovulation temporarily,98% (first 6 months),Natural postpartum contraception,Temporary method,None,New mothers breastfeeding
+Contraceptive Gel,Sperm-blocking vaginal gel,86%,Non-hormonal on-demand use,Less effective than long-term methods,Irritation,Birth control without hormones
+CycleBeads Method,Bead system to track fertility cycle,76-88%,Easy natural method,Requires regular cycles,None,Natural contraception users
+Skin Patch Contraceptive,Hormonal patch on skin changed weekly,91-99%,Easy to use weekly,May detach,Skin irritation,Women wanting weekly contraception
+Subdermal Implant,Hormone-releasing rod under skin,>99%,Long-lasting 3-5 years,Requires trained insertion,Irregular bleeding,Women seeking long-term contraception
+Hormonal Shot,Injection every 3 months preventing ovulation,94-99%,Private convenient,Delayed fertility return,Weight gain headaches,Women preferring injections
+Progesterone IUD,Hormone releasing intrauterine device,>99%,Reduces menstrual bleeding,Insertion procedure,Spotting cramps,Long-term contraception users
+Natural Calendar Method,Avoid sex on predicted fertile days,76-88%,No medication required,Less reliable,None,Natural family planning
+Symptothermal Method,Tracking temperature and cervical mucus,76-88%,More accurate natural method,Requires monitoring,None,Natural planning couples
+Barrier Gel,Sperm-blocking gel used before intercourse,86%,On-demand contraception,Must apply each time,Irritation,Occasional contraception users
+Dual Protection Method,Using condom plus hormonal method,>99%,STI and pregnancy protection,Requires multiple methods,None,High-risk STI environments

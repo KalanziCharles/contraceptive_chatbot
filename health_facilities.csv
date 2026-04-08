@@ -1,0 +1,5 @@
+name,location,latitude,longitude,facility_type,offers_free_services,services
+Kabale Regional Referral Hospital,Kabale Town,-1.2486,29.9899,hospital,True,"Family planning, implants, IUDs"
+Rugarama Hospital,Kabale,-1.2600,29.9900,private,False,"General and reproductive health"
+Kyanamira Health Centre III,Kabale,-1.2700,29.9800,health_center,True,"Basic contraceptive service"
+Medicus Healthcare,Kabale Town,-1.2550,29.9950,private,False,"Private reproductive services"
