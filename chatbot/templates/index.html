@@ -7,56 +7,89 @@
 <style>
 
 body{
-font-family: Arial, sans-serif;
-background:#f5f7fa;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
 margin:0;
+font-family: Arial, sans-serif;
+display:flex;
+height:100vh;
+background:#f5f7fa;
 }
 
-/* Chat Container */
+/* SIDEBAR */
 
-.chat-container{
-width:360px;
-height:600px;
-background:white;
-border-radius:12px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
+.sidebar{
+width:250px;
+background:#1e293b;
+color:white;
 display:flex;
 flex-direction:column;
-overflow:hidden;
+padding:10px;
 }
 
-/* Header */
+.sidebar h2{
+font-size:16px;
+margin-bottom:10px;
+}
+
+.new-chat{
+background:#2A7DE1;
+border:none;
+padding:10px;
+color:white;
+border-radius:8px;
+cursor:pointer;
+margin-bottom:15px;
+}
+
+.chat-list{
+flex:1;
+overflow-y:auto;
+}
+
+.chat-item{
+padding:8px;
+border-radius:6px;
+cursor:pointer;
+font-size:14px;
+}
+
+.chat-item:hover{
+background:#334155;
+}
+
+/* MAIN CHAT */
+
+.chat-container{
+flex:1;
+display:flex;
+flex-direction:column;
+}
+
+/* HEADER */
 
 .chat-header{
 background:#2A7DE1;
 color:white;
 padding:15px;
-font-weight:bold;
 text-align:center;
+font-weight:bold;
 }
 
-/* Chat Area */
+/* CHAT BOX */
 
 .chat-box{
 flex:1;
-padding:10px;
+padding:15px;
 overflow-y:auto;
 display:flex;
 flex-direction:column;
 gap:10px;
 }
 
-/* Messages */
-
 .bot-message{
 background:#e6f0ff;
 padding:10px;
 border-radius:10px;
-max-width:75%;
+max-width:70%;
 }
 
 .user-message{
@@ -65,28 +98,23 @@ color:white;
 padding:10px;
 border-radius:10px;
 align-self:flex-end;
-max-width:75%;
+max-width:70%;
 }
 
-/* Suggested Questions */
+/* FAQ DROPDOWN */
 
-.quick-questions{
+.faq{
 padding:10px;
-display:flex;
-flex-wrap:wrap;
-gap:5px;
+border-top:1px solid #ddd;
 }
 
-.quick-questions button{
-background:#f0f0f0;
-border:none;
-padding:6px 10px;
-border-radius:8px;
-cursor:pointer;
-font-size:12px;
+.faq select{
+width:100%;
+padding:8px;
+border-radius:6px;
 }
 
-/* Input Area */
+/* INPUT */
 
 .input-area{
 display:flex;
@@ -113,6 +141,21 @@ cursor:pointer;
 
 <body>
 
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<button class="new-chat" onclick="newChat()">+ New Chat</button>
+
+<h2>Recent Chats</h2>
+
+<div class="chat-list" id="chatList">
+<div class="chat-item">Contraceptive methods</div>
+<div class="chat-item">Side effects</div>
+</div>
+
+</div>
+
+<!-- CHAT AREA -->
 <div class="chat-container">
 
 <div class="chat-header">
@@ -122,141 +165,111 @@ SafeChoice AI Assistant
 <div class="chat-box" id="chatBox">
 
 <div class="bot-message">
-Hello 👋 I can help you learn about contraceptive options, side effects, and clinics.
+Hello 👋 I can help with contraceptives, side effects, and clinics.
 </div>
 
 </div>
 
-<div class="quick-questions">
-
-<button onclick="quickMessage('Best contraceptive method')">
-Best method
-</button>
-
-<button onclick="quickMessage('Side effects of implants')">
-Implant side effects
-</button>
-
-<button onclick="quickMessage('Natural family planning')">
-Natural planning
-</button>
-
-<button onclick="quickMessage('Where can I get contraceptives')">
-Find clinic
-</button>
-
+<!-- FAQ DROPDOWN -->
+<div class="faq">
+<select onchange="quickMessage(this.value)">
+<option value="">💡 Frequently Asked Questions</option>
+<option value="What are the different contraceptive methods?">Methods</option>
+<option value="What are side effects of contraceptives?">Side effects</option>
+<option value="Which contraceptive is best for me?">Best method</option>
+<option value="Where can I get contraceptives near me?">Find clinic</option>
+</select>
 </div>
 
+<!-- INPUT -->
 <div class="input-area">
-
 <input type="text" id="userInput" placeholder="Ask your question...">
-
 <button onclick="sendMessage()">Send</button>
-
 </div>
 
 </div>
 
 <script>
 
+// NEW CHAT
+function newChat(){
+document.getElementById("chatBox").innerHTML = `
+<div class="bot-message">
+New chat started 👋 Ask me anything about contraceptives.
+</div>
+`;
+}
+
+// ADD USER MESSAGE
 function addUserMessage(message){
+let chatBox = document.getElementById("chatBox");
 
-let chatBox = document.getElementById("chatBox")
+let div = document.createElement("div");
+div.className = "user-message";
+div.innerText = message;
 
-let div = document.createElement("div")
-div.className = "user-message"
-div.innerText = message
-
-chatBox.appendChild(div)
-
-chatBox.scrollTop = chatBox.scrollHeight
+chatBox.appendChild(div);
+chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// ADD BOT MESSAGE
 function addBotMessage(message){
+let chatBox = document.getElementById("chatBox");
 
-let chatBox = document.getElementById("chatBox")
+let div = document.createElement("div");
+div.className = "bot-message";
+div.innerText = message;
 
-let div = document.createElement("div")
-div.className = "bot-message"
-div.innerText = message
-
-chatBox.appendChild(div)
-
-chatBox.scrollTop = chatBox.scrollHeight
-}
-function showTyping(){
-
-let chatBox = document.getElementById("chatBox")
-
-let typing = document.createElement("div")
-
-typing.className = "bot-message"
-
-typing.id = "typing"
-
-typing.innerText = "Bot is typing..."
-
-chatBox.appendChild(typing)
-
-chatBox.scrollTop = chatBox.scrollHeight
+chatBox.appendChild(div);
+chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function removeTyping(){
+// SEND MESSAGE
+function sendMessage(){
 
-let typing = document.getElementById("typing")
+let input = document.getElementById("userInput");
+let message = input.value.trim();
 
-if(typing){
-typing.remove()
+if(!message) return;
+
+addUserMessage(message);
+input.value = "";
+
+// GET LOCATION
+navigator.geolocation.getCurrentPosition(function(position){
+
+fetch("/chatbot/", {
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body: JSON.stringify({
+message: message,
+latitude: position.coords.latitude,
+longitude: position.coords.longitude
+})
+})
+.then(res => res.json())
+.then(data => addBotMessage(data.response));
+
+}, function(){
+
+// fallback
+fetch("/chatbot/", {
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body: JSON.stringify({ message: message })
+})
+.then(res => res.json())
+.then(data => addBotMessage(data.response));
+
+});
+
 }
 
-}
-
-function sendMessage() {
-    const message = document.getElementById("messageInput").value;
-
-    navigator.geolocation.getCurrentPosition(function(position) {
-
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-
-        fetch("/chatbot/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: message,
-                latitude: lat,
-                longitude: lon
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log(data.response);
-        });
-
-    }, function(error) {
-        console.log("GPS error:", error);
-
-        // fallback if user denies location
-        fetch("/chatbot/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                message: message
-            })
-        });
-    });
-}
-
+// FAQ QUICK MESSAGE
 function quickMessage(text){
-
-document.getElementById("userInput").value = text
-
-sendMessage()
-
+if(!text) return;
+document.getElementById("userInput").value = text;
+sendMessage();
 }
 
 </script>

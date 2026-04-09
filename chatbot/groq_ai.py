@@ -4,9 +4,10 @@ from groq import Groq
 
 
 load_dotenv() 
-client = Groq(
-    api_key=os.getenv("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"
-))
+GROQ_API_KEY= os.getenv("GROQ_API_KEY")
+client = Groq(api_key= GROQ_API_KEY)
+if not GROQ_API_KEY:
+    raise ValueError("GROQ_API_KEY is not set in environment variables")
 
 def get_ai_response(user_message, context, history):
 
