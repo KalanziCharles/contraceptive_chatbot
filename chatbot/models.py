@@ -35,15 +35,17 @@ class HealthFacility(models.Model):
 
     offers_free_services = models.BooleanField(default=False)
     services = models.TextField()
+    
+class ChatSession(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Session {self.id}"
 
 
 class ChatHistory(models.Model):
-
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE)
     user_message = models.TextField()
-
     bot_response = models.TextField()
-
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.user_message   
+    created_at = models.DateTimeField(auto_now_add=True)  
+    
