@@ -15,7 +15,6 @@ background:#f5f7fa;
 }
 
 /* SIDEBAR */
-
 .sidebar{
 width:250px;
 background:#1e293b;
@@ -57,7 +56,6 @@ background:#334155;
 }
 
 /* MAIN CHAT */
-
 .chat-container{
 flex:1;
 display:flex;
@@ -65,7 +63,6 @@ flex-direction:column;
 }
 
 /* HEADER */
-
 .chat-header{
 background:#2A7DE1;
 color:white;
@@ -75,7 +72,6 @@ font-weight:bold;
 }
 
 /* CHAT BOX */
-
 .chat-box{
 flex:1;
 padding:15px;
@@ -101,8 +97,7 @@ align-self:flex-end;
 max-width:70%;
 }
 
-/* FAQ DROPDOWN */
-
+/* FAQ */
 .faq{
 padding:10px;
 border-top:1px solid #ddd;
@@ -115,7 +110,6 @@ border-radius:6px;
 }
 
 /* INPUT */
-
 .input-area{
 display:flex;
 border-top:1px solid #ddd;
@@ -148,7 +142,7 @@ cursor:pointer;
 
 <h2>Recent Chats</h2>
 
-<div class="chat-list" id="chatList">
+<div class="chat-list">
 <div class="chat-item">Contraceptive methods</div>
 <div class="chat-item">Side effects</div>
 </div>
@@ -170,7 +164,7 @@ Hello 👋 I can help with contraceptives, side effects, and clinics.
 
 </div>
 
-<!-- FAQ DROPDOWN -->
+<!-- FAQ -->
 <div class="faq">
 <select onchange="quickMessage(this.value)">
 <option value="">💡 Frequently Asked Questions</option>
@@ -191,7 +185,28 @@ Hello 👋 I can help with contraceptives, side effects, and clinics.
 
 <script>
 
-// NEW CHAT
+/* =========================
+   CSRF COOKIE FUNCTION
+========================= */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+/* =========================
+   CHAT FUNCTIONS
+========================= */
+
 function newChat(){
 document.getElementById("chatBox").innerHTML = `
 <div class="bot-message">
@@ -200,7 +215,6 @@ New chat started 👋 Ask me anything about contraceptives.
 `;
 }
 
-// ADD USER MESSAGE
 function addUserMessage(message){
 let chatBox = document.getElementById("chatBox");
 
@@ -212,7 +226,6 @@ chatBox.appendChild(div);
 chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ADD BOT MESSAGE
 function addBotMessage(message){
 let chatBox = document.getElementById("chatBox");
 
@@ -224,7 +237,10 @@ chatBox.appendChild(div);
 chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// SEND MESSAGE
+/* =========================
+   SEND MESSAGE (WITH CSRF)
+========================= */
+
 function sendMessage(){
 
 let input = document.getElementById("userInput");
@@ -239,12 +255,15 @@ input.value = "";
 navigator.geolocation.getCurrentPosition(function(position){
 
 fetch("/chatbot/", {
-method:"POST",
-headers:{ "Content-Type":"application/json" },
+method: "POST",
+headers: {
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCookie("csrftoken")
+},
 body: JSON.stringify({
-message: message,
-latitude: position.coords.latitude,
-longitude: position.coords.longitude
+    message: message,
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude
 })
 })
 .then(res => res.json())
@@ -252,10 +271,13 @@ longitude: position.coords.longitude
 
 }, function(){
 
-// fallback
+// fallback without location
 fetch("/chatbot/", {
-method:"POST",
-headers:{ "Content-Type":"application/json" },
+method: "POST",
+headers: {
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCookie("csrftoken")
+},
 body: JSON.stringify({ message: message })
 })
 .then(res => res.json())
@@ -265,7 +287,10 @@ body: JSON.stringify({ message: message })
 
 }
 
-// FAQ QUICK MESSAGE
+/* =========================
+   FAQ QUICK ACTION
+========================= */
+
 function quickMessage(text){
 if(!text) return;
 document.getElementById("userInput").value = text;

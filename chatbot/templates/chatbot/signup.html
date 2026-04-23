@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+</head>
+<body>
+    <h2>Create Account</h2>
+    <p>Signup is optional. Use a nickname if you want to stay anonymous.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <p><a href="{% url 'login' %}">Already have an account?</a></p>
+    <p><a href="{% url 'chat_ui' %}">Continue as guest</a></p>
+</body>
+</html>

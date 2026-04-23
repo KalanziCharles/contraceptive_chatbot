@@ -202,7 +202,18 @@ body {
 <body>
 
 <div class="sidebar">
-    <button class="new-chat" onclick="newChat()">+ New Chat</button>
+    <button class="new-chat" onclick="newChat()">+ New Chat</button> 
+
+    <div style="margin-bottom: 15px;">
+    {% if user.is_authenticated %}
+        <p>Logged in as {{ user.username }}</p>
+        <a href="{% url 'logout' %}" style="color:white;">Logout</a>
+    {% else %}
+        <a href="{% url 'login' %}" style="color:white;">Login</a> |
+        <a href="{% url 'signup' %}" style="color:white;">Sign Up</a>
+        <p style="font-size:13px;color:#ccc;">You can still use the chatbot anonymously.</p>
+    {% endif %}
+</div>
 
     <div class="sidebar-section-title">History</div>
     <div class="chat-list" id="chatList"></div>
@@ -255,14 +266,42 @@ function clearChatBox() {
     `;
 }
 
-function addMsg(text, type) {
+function addMsg(text, type, messageId = null) {
     const div = document.createElement("div");
     div.className = "message " + type;
-    div.innerText = text;
+
+    const content = document.createElement("div");
+    content.innerText = text;
+
+    div.appendChild(content);
+
+    // Professional remove button
+    if (messageId) {
+        const deleteBtn = document.createElement("button");
+
+        deleteBtn.innerText = "Remove from History";
+
+        deleteBtn.style.marginTop = "10px";
+        deleteBtn.style.background = "transparent";
+        deleteBtn.style.border = "none";
+        deleteBtn.style.cursor = "pointer";
+        deleteBtn.style.color = "#f87171";
+        deleteBtn.style.fontSize = "13px";
+        deleteBtn.style.fontWeight = "500";
+        deleteBtn.style.padding = "0";
+        deleteBtn.style.textAlign = "left";
+
+        deleteBtn.onclick = function () {
+            deleteMessage(messageId);
+        };
+
+        div.appendChild(deleteBtn);
+    }
 
     const box = document.getElementById("chatBox");
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
+
     return div;
 }
 
@@ -336,8 +375,8 @@ function loadChat(id) {
                 `;
             } else {
                 data.history.forEach(chat => {
-                    addMsg(chat.user_message, "user");
-                    addMsg(chat.bot_response, "bot");
+                    addMsg(chat.user_message, "user", chat.id);
+                    addMsg(chat.bot_response, "bot", chat.id);
                 });
             }
 
@@ -450,6 +489,35 @@ window.onload = function () {
     loadSessions();
     clearChatBox();
 };
+
+function deleteMessage(messageId) {
+    const confirmDelete = confirm( "Are you sure you want to remove this message from history?");
+
+    if (!confirmDelete) return;
+
+    fetch("/delete-message/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            message_id: messageId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            loadChat(session_id);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to delete message.");
+    });
+}
 </script>
 
 </body>

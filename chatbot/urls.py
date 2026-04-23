@@ -17,4 +17,12 @@ urlpatterns = [
     path("sessions/", views.get_sessions),
 
     path("new-session/", views.new_session),
+
+    path("signup/", views.signup_view, name="signup"),
+
+    path("login/", views.login_view, name="login"),
+
+    path("logout/", views.logout_view, name="logout"),
+
+    path("delete-message/", views.delete_single_message, name="delete_message"),
 ]

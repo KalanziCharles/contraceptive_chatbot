@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 
@@ -37,10 +38,18 @@ class HealthFacility(models.Model):
     services = models.TextField()
     
 class ChatSession(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Session {self.id}"
+        if self.user:
+            return f"Session {self.id} - {self.user.username}"
+        return f"Anonymous Session {self.id}"
 
 
 class ChatHistory(models.Model):

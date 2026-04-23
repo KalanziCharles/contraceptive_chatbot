@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <p>You can still use the chatbot anonymously. Login is optional.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
+
+    <p><a href="{% url 'signup' %}">Create account</a></p>
+    <p><a href="{% url 'chat_ui' %}">Continue as guest</a></p>
+</body>
+</html>

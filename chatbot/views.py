@@ -3,6 +3,12 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 import math
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from django.shortcuts import redirect
+from .forms import SignUpForm
+from django.views.decorators.http import require_POST
 
 from .models import (
     ChatHistory,
@@ -28,15 +34,67 @@ def home(request):
 def chat_ui(request):
     return render(request, "chatbot/chat.html")
 
+##SignUp Views
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect("chat_ui")
 
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = User.objects.create_user(
+                username=form.cleaned_data["username"],
+                email=form.cleaned_data.get("email", ""),
+                password=form.cleaned_data["password"]
+            )
+            login(request, user)
+
+            # optionally attach anonymous sessions to this user
+            anonymous_session_id = request.session.get("guest_chat_session_id")
+            if anonymous_session_id:
+                ChatSession.objects.filter(
+                    id=anonymous_session_id,
+                    user__isnull=True
+                ).update(user=user)
+
+            return redirect("chat_ui")
+    else:
+        form = SignUpForm()
+
+    return render(request, "chatbot/signup.html", {"form": form})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect("chat_ui")
+
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            login(request, form.get_user())
+
+            anonymous_session_id = request.session.get("guest_chat_session_id")
+            if anonymous_session_id:
+                ChatSession.objects.filter(
+                    id=anonymous_session_id,
+                    user__isnull=True
+                ).update(user=form.get_user())
+
+            return redirect("chat_ui")
+    else:
+        form = AuthenticationForm()
+
+    return render(request, "chatbot/login.html", {"form": form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("chat_ui")
 
 # =========================
 # 📂 GET ALL CHAT SESSIONS
 # =========================
 def get_sessions(request):
-    from django.http import JsonResponse
-    from .models import ChatSession, ChatHistory
-
     sessions = ChatSession.objects.all().order_by('-id')
     data = []
 
@@ -57,7 +115,7 @@ def get_sessions(request):
     return JsonResponse({"sessions": data})
 
 def new_session(request):
-    print("NEW SESSION VIEW HIT")
+    #print("NEW SESSION VIEW HIT")
     session = ChatSession.objects.create()
     return JsonResponse({"session_id": session.id})
 
@@ -67,11 +125,15 @@ def new_session(request):
 def chat_history(request):
     session_id = request.GET.get("session_id")
 
-    chats = ChatHistory.objects.filter(session_id=session_id).order_by("id")
+    chats = ChatHistory.objects.filter(
+        session_id=session_id
+    ).order_by("created_at")
 
     data = []
+
     for chat in chats:
         data.append({
+            "id": chat.id,
             "user_message": chat.user_message,
             "bot_response": chat.bot_response
         })
@@ -103,7 +165,6 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 # 🧠 INTENT DETECTION
 # =========================
 def detect_intents(message):
-
     intents = []
     message = message.lower()
 
@@ -114,8 +175,7 @@ def detect_intents(message):
         intents.append("recommendation")
 
     if any(word in message for word in [
-        "facility", "clinic", "hospital",
-        "where", "location"
+        "facility", "clinic", "hospital", "where", "location"
     ]):
         intents.append("facility")
 
@@ -123,6 +183,16 @@ def detect_intents(message):
         "near", "nearest", "nearby"
     ]):
         intents.append("nearest_facility")
+
+    if "where" in message and (
+        "contraceptive" in message or
+        "family planning" in message or
+        "reproductive" in message
+    ):
+        if "facility" not in intents:
+            intents.append("facility")
+        if "nearest_facility" not in intents:
+            intents.append("nearest_facility")
 
     if "free" in message:
         intents.append("free_facility")
@@ -202,7 +272,6 @@ def is_contraceptive_related(message):
 # 🤖 MAIN CHAT API
 # =========================
 def chatbot_response(request):
-
     if request.method != "POST":
         return JsonResponse({"response": "Invalid request"}, status=400)
 
@@ -214,8 +283,8 @@ def chatbot_response(request):
         user_lon = data.get("longitude")
         session_id = data.get("session_id")
 
-        print("LAT:", user_lat, "LON:", user_lon)
-        print("USER:", message)
+        #print("LAT:", user_lat, "LON:", user_lon)
+        #print("USER:", message)
 
         if not message:
             return JsonResponse({"response": "Please enter a message."})
@@ -226,22 +295,26 @@ def chatbot_response(request):
         if session_id:
             session = ChatSession.objects.get(id=session_id)
         else:
-            session = ChatSession.objects.create()
+            if request.user.is_authenticated:
+                session = ChatSession.objects.create(user=request.user)
+            else:
+                session = ChatSession.objects.create()
+                request.session["guest_chat_session_id"] = session.id
 
         # =========================
         # INTENTS
         # =========================
         intents = detect_intents(message)
-        print("INTENTS:", intents)
+        #print("INTENTS:", intents)
 
-        ALLOWED_FACILITY_INTENTS = [
+        allowed_facility_intents = [
             "facility",
             "free_facility",
             "private_facility",
             "nearest_facility"
         ]
 
-        if not is_contraceptive_related(message) and not any(i in intents for i in ALLOWED_FACILITY_INTENTS):
+        if not is_contraceptive_related(message) and not any(i in intents for i in allowed_facility_intents):
             response = (
                 "I am a reproductive health assistant. "
                 "I only provide information about contraceptives and nearby health facilities."
@@ -258,31 +331,40 @@ def chatbot_response(request):
                 "session_id": session.id
             })
 
-        # =========================
-        # BUILD RESPONSE
-        # =========================
         response_parts = []
-
-        # 🤖 AI RESPONSE
-        context = get_contraceptive_data(message)
-        history = get_chat_history(session)
-        ai_response = get_ai_response(message, context, history)
-        response_parts.append(ai_response)
+        response = "\n\n".join(response_parts)
+        facility_response_added = False
 
         # =========================
-        # 🏥 FACILITY LOGIC
+        # FACILITY QUERYSET
         # =========================
+        facility_queryset = (
+    HealthFacility.objects.filter(services__icontains="family planning") |
+    HealthFacility.objects.filter(services__icontains="contraceptive") |
+    HealthFacility.objects.filter(services__icontains="reproductive") |
+    HealthFacility.objects.filter(services__icontains="women") |
+    HealthFacility.objects.filter(services__icontains="maternal")
+        ).distinct()
+
+        if not facility_queryset.exists():
+            facility_queryset = HealthFacility.objects.all()
+
+        # =========================
+        # FACILITY LOGIC
+        # =========================
+
+        # nearest
         if "nearest_facility" in intents:
-
             if not user_lat or not user_lon:
-                response_parts.append("📍 Please allow location access.")
+                response_parts.append(
+                    "📍 Please allow location access so I can find the nearest facility for contraceptive information."
+                )
             else:
-                facilities = HealthFacility.objects.all()
                 nearest = None
-                min_distance = float('inf')
+                min_distance = float("inf")
 
-                for f in facilities:
-                    if not f.latitude or not f.longitude:
+                for f in facility_queryset:
+                    if f.latitude is None or f.longitude is None:
                         continue
 
                     distance = calculate_distance(
@@ -298,45 +380,103 @@ def chatbot_response(request):
 
                 if nearest:
                     response_parts.append(
-                        f"🏥 Nearest facility:\n"
+                        f"🏥 Nearest facility for contraceptive information:\n"
                         f"{nearest.name} ({nearest.location})\n"
+                        f"Services: {nearest.services}\n"
                         f"Distance: {min_distance:.2f} km"
                     )
+                    facility_response_added = True
                 else:
-                    response_parts.append("No nearby facilities found.")
+                    response_parts.append("No nearby contraceptive-related facilities found.")
 
+        # free
         if "free_facility" in intents:
-            facilities = HealthFacility.objects.filter(offers_free_services=True)
+            free_facilities = facility_queryset.filter(offers_free_services=True)
 
-            text = "🏥 Free facilities:\n\n"
-            for f in facilities:
-                text += f"{f.name} ({f.location})\n"
+            if free_facilities.exists():
+                text = "🏥 Free facilities for contraceptive information:\n\n"
+                for f in free_facilities[:5]:
+                    text += f"{f.name} ({f.location}) - {f.services}\n"
+            else:
+                text = "No free contraceptive-related facilities found."
 
             response_parts.append(text)
+            facility_response_added = True
 
+        # private
         if "private_facility" in intents:
-            facilities = HealthFacility.objects.filter(facility_type="private")
+            private_facilities = facility_queryset.filter(facility_type="private")
 
-            text = "🏥 Private facilities:\n\n"
-            for f in facilities:
-                text += f"{f.name} ({f.location})\n"
-
-            response_parts.append(text)
-
-        if "facility" in intents:
-            facilities = HealthFacility.objects.all()[:5]
-
-            text = "🏥 Available facilities:\n\n"
-            for f in facilities:
-                text += f"{f.name} ({f.location}) - {f.services}\n"
+            if private_facilities.exists():
+                text = "🏥 Private facilities for contraceptive information:\n\n"
+                for f in private_facilities[:5]:
+                    text += f"{f.name} ({f.location}) - {f.services}\n"
+            else:
+                text = "No private contraceptive-related facilities found."
 
             response_parts.append(text)
+            facility_response_added = True
+
+        # general facility lookup
+        if "facility" in intents and not facility_response_added:
+            facilities = list(facility_queryset[:10])
+
+            if user_lat and user_lon:
+                ranked = []
+
+                for f in facilities:
+                    if f.latitude is not None and f.longitude is not None:
+                        distance = calculate_distance(
+                            float(user_lat),
+                            float(user_lon),
+                            float(f.latitude),
+                            float(f.longitude)
+                        )
+                        ranked.append((distance, f))
+                    else:
+                        ranked.append((999999, f))
+
+                ranked.sort(key=lambda x: x[0])
+
+                text = "🏥 Facilities where you can get contraceptive information:\n\n"
+                for distance, f in ranked[:5]:
+                    if distance == 999999:
+                        text += f"{f.name} ({f.location}) - {f.services}\n"
+                    else:
+                        text += f"{f.name} ({f.location}) - {f.services} [{distance:.2f} km]\n"
+            else:
+                text = "🏥 Facilities where you can get contraceptive information:\n\n"
+                for f in facilities[:5]:
+                    text += f"{f.name} ({f.location}) - {f.services}\n"
+
+            response_parts.append(text)
+            facility_response_added = True
+
+        # =========================
+        # AI RESPONSE
+        # only for advice/explanation questions
+        # =========================
+        if (
+            "side_effect" in intents
+            or "recommendation" in intents
+            or intents == ["general"]
+        ):
+            context = get_contraceptive_data(message)
+            history = get_chat_history(session)
+            ai_response = get_ai_response(message, context, history)
+            response_parts.append(ai_response)
+
+        # If no response built, fallback to AI
+        if not response_parts:
+            context = get_contraceptive_data(message)
+            history = get_chat_history(session)
+            ai_response = get_ai_response(message, context, history)
+            response_parts.append(ai_response)
 
         # =========================
         # FINAL RESPONSE
         # =========================
         response = "\n\n".join(response_parts)
-
         print("FINAL RESPONSE:", response)
 
         # SAVE CHAT
@@ -354,3 +494,29 @@ def chatbot_response(request):
     except Exception as e:
         print("ERROR:", str(e))
         return JsonResponse({"response": "Server error occurred"})
+    
+@require_POST
+def delete_single_message(request):
+    try:
+        data = json.loads(request.body)
+        message_id = data.get("message_id")
+
+        if not message_id:
+            return JsonResponse({
+                "status": "error",
+                "message": "Message ID is required"
+            })
+
+        ChatHistory.objects.filter(id=message_id).delete()
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Message removed from history successfully"
+        })
+
+    except Exception as e:
+        print("DELETE MESSAGE ERROR:", str(e))
+        return JsonResponse({
+            "status": "error",
+            "message": "Failed to delete message"
+        })
