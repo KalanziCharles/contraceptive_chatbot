@@ -2,302 +2,716 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SafeChoice AI Chatbot</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeChoice AI</title>
 <style>
+    :root {
+    --bg-main: #fff7fb;
+    --bg-sidebar: #7c3aed;
+    --bg-sidebar-soft: #6d28d9;
+    --bg-chat: #fff7fb;
+    --bg-card: #ffffff;
+    --bg-user: #ec4899;
+    --bg-bot: #f3e8ff;
+    --text-main: #2d1b35;
+    --text-light: #ffffff;
+    --text-muted: #6b7280;
+    --border-color: #f0d5ff;
+    --button-main: #ec4899;
+    --button-hover: #db2777;
+    --faq-bg: #8b5cf6;
+    --faq-hover: #a855f7;
+    --input-bg: #ffffff;
+}
 
-body{
-margin:0;
-font-family: Arial, sans-serif;
-display:flex;
-height:100vh;
-background:#f5f7fa;
+body.dark-mode {
+    --bg-main: #1f1029;
+    --bg-sidebar: #2a1238;
+    --bg-sidebar-soft: #3b1850;
+    --bg-chat: #1f1029;
+    --bg-card: #2d1b3a;
+    --bg-user: #db2777;
+    --bg-bot: #3b2a4a;
+    --text-main: #f9e8ff;
+    --text-light: #ffffff;
+    --text-muted: #d8b4fe;
+    --border-color: #4c1d5f;
+    --button-main: #ec4899;
+    --button-hover: #f472b6;
+    --faq-bg: #4c1d95;
+    --faq-hover: #6d28d9;
+    --input-bg: #2d1b3a;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+    height: 100vh;
+    background: var(--bg-main);
+    color: var(--text-main);
 }
 
 /* SIDEBAR */
-.sidebar{
-width:250px;
-background:#1e293b;
-color:white;
-display:flex;
-flex-direction:column;
-padding:10px;
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    background: var(--bg-sidebar);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    border-right: 1px solid var(--border-color);
+    overflow: hidden; /* important */
 }
 
-.sidebar h2{
-font-size:16px;
-margin-bottom:10px;
+.new-chat {
+    background: var(--button-main);
+    border: none;
+    padding: 12px;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
 }
 
-.new-chat{
-background:#2A7DE1;
-border:none;
-padding:10px;
-color:white;
-border-radius:8px;
-cursor:pointer;
-margin-bottom:15px;
+.new-chat:hover {
+    background: var(--button-hover);
 }
 
-.chat-list{
-flex:1;
-overflow-y:auto;
+.sidebar-section-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fce7f3;
+    margin: 14px 0 8px;
+    flex-shrink: 0;
 }
 
-.chat-item{
-padding:8px;
-border-radius:6px;
-cursor:pointer;
-font-size:14px;
+/* History should scroll alone */
+.history-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
 }
 
-.chat-item:hover{
-background:#334155;
+.chat-list {
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 4px;
 }
 
-/* MAIN CHAT */
-.chat-container{
-flex:1;
-display:flex;
-flex-direction:column;
+/* FAQ should remain visible */
+.faq-section {
+    flex-shrink: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.2);
 }
 
-/* HEADER */
-.chat-header{
-background:#2A7DE1;
-color:white;
-padding:15px;
-text-align:center;
-font-weight:bold;
+.chat-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    background: transparent;
+    transition: background 0.2s ease;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* CHAT BOX */
-.chat-box{
-flex:1;
-padding:15px;
-overflow-y:auto;
-display:flex;
-flex-direction:column;
-gap:10px;
+.chat-item:hover,
+.chat-item.active {
+    background: var(--bg-sidebar-soft);
 }
 
-.bot-message{
-background:#e6f0ff;
-padding:10px;
-border-radius:10px;
-max-width:70%;
+.faq-left {
+    margin-top: 4px;
 }
 
-.user-message{
-background:#2A7DE1;
-color:white;
-padding:10px;
-border-radius:10px;
-align-self:flex-end;
-max-width:70%;
+.faq-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--faq-bg);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s ease;
+    color: white;
 }
 
-/* FAQ */
-.faq{
-padding:10px;
-border-top:1px solid #ddd;
+.faq-item:hover {
+    background: var(--faq-hover);
 }
 
-.faq select{
-width:100%;
-padding:8px;
-border-radius:6px;
+/* MAIN */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-chat);
+    color: var(--text-main);
+    min-width: 0;
+}
+
+.chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 18px;
+    font-weight: bold;
+    background: var(--bg-card);
+    color: var(--text-main);
+}
+
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.welcome {
+    color: var(--text-main);
+    background: var(--bg-bot);
+    padding: 14px 16px;
+    border-radius: 14px;
+    max-width: 760px;
+}
+
+.message {
+    max-width: 75%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.user {
+    background: var(--bg-user);
+    color: white;
+    align-self: flex-end;
+}
+
+.bot {
+    background: var(--bg-bot);
+    color: var(--text-main);
+    align-self: flex-start;
+}
+
+.typing {
+    font-style: italic;
+    opacity: 0.8;
 }
 
 /* INPUT */
-.input-area{
-display:flex;
-border-top:1px solid #ddd;
+.input-area {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-card);
 }
 
-.input-area input{
-flex:1;
-padding:10px;
-border:none;
-outline:none;
+#msg {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    outline: none;
+    font-size: 14px;
+    background: var(--input-bg);
+    color: var(--text-main);
 }
 
-.input-area button{
-background:#2A7DE1;
-color:white;
-border:none;
-padding:10px 15px;
-cursor:pointer;
+#msg::placeholder {
+    color: var(--text-muted);
 }
 
+.send-btn {
+    padding: 14px 18px;
+    border: none;
+    background: var(--button-main);
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.send-btn:hover {
+    background: var(--button-hover);
+}
+
+/* TOP BAR */
+.top-bar {
+    height: 64px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.chat-title {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.top-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.top-link {
+    text-decoration: none;
+    background: var(--button-main);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.top-link:hover {
+    background: var(--button-hover);
+}
+
+.theme-toggle-top {
+    background: var(--faq-bg);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.theme-toggle-top:hover {
+    background: var(--faq-hover);
+}
+
+.user-label {
+    font-size: 14px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.top-right-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.top-right-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.anonymous-note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+    .top-bar {
+    min-height: 64px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+    .top-right-actions {
+        margin-left: 0;
+        flex-wrap: wrap;
+    }
+}
 </style>
 </head>
-
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
+    <button class="new-chat" onclick="newChat()">+ New Chat</button>
 
-<button class="new-chat" onclick="newChat()">+ New Chat</button>
+    <div class="history-section">
+        <div class="sidebar-section-title">History</div>
+        <div class="chat-list" id="chatList"></div>
+    </div>
 
+    <div class="faq-section">
+        <div class="sidebar-section-title">Frequently Asked Questions</div>
 
-<h2>Recent Chats</h2>
+        <div class="faq-left">
+            <div class="faq-item" onclick="quickMsg('What are the different contraceptive methods?')">
+                Methods
+            </div>
 
-<div class="chat-list">
-<div class="chat-item">Contraceptive methods</div>
-<div class="chat-item">Side effects</div>
+            <div class="faq-item" onclick="quickMsg('What are the side effects of contraceptives?')">
+                Side Effects
+            </div>
+
+            <div class="faq-item" onclick="quickMsg('Which nearby clinic can I visit for contraceptive information?')">
+                Nearby Clinic
+            </div>
+
+            <div class="faq-item" onclick="quickMsg('Which contraceptive method is best for me?')">
+                Best Method
+            </div>
+        </div>
+    </div>
 </div>
 
+<div class="main">
+
+    <div class="top-bar">
+    <div class="chat-title">
+        SafeChoice AI
+    </div>
+    <div class="top-right-wrapper">
+    <div class="top-right-actions">
+        {% if user.is_authenticated %}
+            <span class="user-label">Hi, {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="top-link">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="top-link">Login</a>
+            <a href="{% url 'signup' %}" class="top-link">Sign Up</a>
+        {% endif %}
+
+        <button class="theme-toggle-top" onclick="toggleTheme()">
+            🌙
+        </button>
+    </div>
+
+    {% if not user.is_authenticated %}
+        <p class="anonymous-note">
+            You can still use the chatbot anonymously.
+        </p>
+    {% endif %}
 </div>
-
-<!-- CHAT AREA -->
-<div class="chat-container">
-
-<div class="chat-header">
-SafeChoice AI Assistant
 </div>
 
 <div class="chat-box" id="chatBox">
+        <div class="welcome">
+            Hello! Ask me about contraceptive methods, side effects, and nearby health facilities.
+        </div>
+    </div>
 
-<div class="bot-message">
-Hello 👋 I can help with contraceptives, side effects, and clinics.
-</div>
-
-</div>
-
-<!-- FAQ -->
-<div class="faq">
-<select onchange="quickMessage(this.value)">
-<option value="">💡 Frequently Asked Questions</option>
-<option value="What are the different contraceptive methods?">Methods</option>
-<option value="What are side effects of contraceptives?">Side effects</option>
-<option value="Which contraceptive is best for me?">Best method</option>
-<option value="Where can I get contraceptives near me?">Find clinic</option>
-</select>
-</div>
-
-<!-- INPUT -->
-<div class="input-area">
-<input type="text" id="userInput" placeholder="Ask your question...">
-<button onclick="sendMessage()">Send</button>
-</div>
-
+    <div class="input-area">
+        <input id="msg" type="text" placeholder="Ask anything..." onkeydown="handleKey(event)">
+        <button class="send-btn" onclick="send()">Send</button>
+    </div>
 </div>
 
 <script>
+let session_id = null;
 
-/* =========================
-   CSRF COOKIE FUNCTION
-========================= */
+/* CSRF */
 function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+    let value = null;
+    document.cookie.split(";").forEach(cookie => {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + "=")) {
+            value = decodeURIComponent(cookie.substring(name.length + 1));
         }
+    });
+    return value;
+}
+
+/* UI HELPERS */
+function clearChatBox() {
+    document.getElementById("chatBox").innerHTML = `
+        <div class="welcome">
+            New chat started 👋 Ask me about contraceptive methods, side effects, and nearby health facilities.
+        </div>
+    `;
+}
+
+function addMsg(text, type, messageId = null) {
+    const div = document.createElement("div");
+    div.className = "message " + type;
+
+    const content = document.createElement("div");
+    content.innerText = text;
+
+    div.appendChild(content);
+
+    // Professional remove button
+    if (messageId) {
+        const deleteBtn = document.createElement("button");
+
+        deleteBtn.innerText = "Remove from History";
+
+        deleteBtn.style.marginTop = "10px";
+        deleteBtn.style.background = "transparent";
+        deleteBtn.style.border = "none";
+        deleteBtn.style.cursor = "pointer";
+        deleteBtn.style.color = "#f87171";
+        deleteBtn.style.fontSize = "13px";
+        deleteBtn.style.fontWeight = "500";
+        deleteBtn.style.padding = "0";
+        deleteBtn.style.textAlign = "left";
+
+        deleteBtn.onclick = function () {
+            deleteMessage(messageId);
+        };
+
+        div.appendChild(deleteBtn);
     }
-    return cookieValue;
+
+    const box = document.getElementById("chatBox");
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+
+    return div;
 }
 
-/* =========================
-   CHAT FUNCTIONS
-========================= */
-
-function newChat(){
-document.getElementById("chatBox").innerHTML = `
-<div class="bot-message">
-New chat started 👋 Ask me anything about contraceptives.
-</div>
-`;
+function setActiveSession(id) {
+    document.querySelectorAll(".chat-item").forEach(item => {
+        item.classList.remove("active");
+        if (item.dataset.sessionId == String(id)) {
+            item.classList.add("active");
+        }
+    });
 }
 
-function addUserMessage(message){
-let chatBox = document.getElementById("chatBox");
-
-let div = document.createElement("div");
-div.className = "user-message";
-div.innerText = message;
-
-chatBox.appendChild(div);
-chatBox.scrollTop = chatBox.scrollHeight;
+function truncateTitle(text) {
+    if (!text) return "New Chat";
+    return text.length > 32 ? text.slice(0, 32) + "..." : text;
 }
 
-function addBotMessage(message){
-let chatBox = document.getElementById("chatBox");
+/* NEW CHAT
+   Do NOT create a backend session yet.
+   A real session is created only when the first message is sent.
+*/
+function newChat() {
+    session_id = null;
+    clearChatBox();
+    document.getElementById("msg").focus();
 
-let div = document.createElement("div");
-div.className = "bot-message";
-div.innerText = message;
-
-chatBox.appendChild(div);
-chatBox.scrollTop = chatBox.scrollHeight;
+    document.querySelectorAll(".chat-item").forEach(item => {
+        item.classList.remove("active");
+    });
 }
 
-/* =========================
-   SEND MESSAGE (WITH CSRF)
-========================= */
+/* LOAD SESSIONS */
+function loadSessions() {
+    fetch("/sessions/")
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("chatList");
+            list.innerHTML = "";
 
-function sendMessage(){
+            data.sessions.forEach(session => {
+                const div = document.createElement("div");
+                div.className = "chat-item";
+                div.dataset.sessionId = session.id;
+                div.innerText = truncateTitle(session.title);
+                div.onclick = () => loadChat(session.id);
+                list.appendChild(div);
+            });
 
-let input = document.getElementById("userInput");
-let message = input.value.trim();
-
-if(!message) return;
-
-addUserMessage(message);
-input.value = "";
-
-// GET LOCATION
-navigator.geolocation.getCurrentPosition(function(position){
-
-fetch("/chatbot/", {
-method: "POST",
-headers: {
-    "Content-Type": "application/json",
-    "X-CSRFToken": getCookie("csrftoken")
-},
-body: JSON.stringify({
-    message: message,
-    latitude: position.coords.latitude,
-    longitude: position.coords.longitude
-})
-})
-.then(res => res.json())
-.then(data => addBotMessage(data.response));
-
-}, function(){
-
-// fallback without location
-fetch("/chatbot/", {
-method: "POST",
-headers: {
-    "Content-Type": "application/json",
-    "X-CSRFToken": getCookie("csrftoken")
-},
-body: JSON.stringify({ message: message })
-})
-.then(res => res.json())
-.then(data => addBotMessage(data.response));
-
-});
-
+            if (session_id !== null) {
+                setActiveSession(session_id);
+            }
+        })
+        .catch(err => console.error("Error loading sessions:", err));
 }
 
-/* =========================
-   FAQ QUICK ACTION
-========================= */
+/* LOAD CHAT HISTORY */
+function loadChat(id) {
+    session_id = id;
 
-function quickMessage(text){
-if(!text) return;
-document.getElementById("userInput").value = text;
-sendMessage();
+    fetch(`/history/?session_id=${id}`)
+        .then(res => res.json())
+        .then(data => {
+            const box = document.getElementById("chatBox");
+            box.innerHTML = "";
+
+            if (!data.history || data.history.length === 0) {
+                box.innerHTML = `
+                    <div class="welcome">
+                        This chat has no messages yet.
+                    </div>
+                `;
+            } else {
+                data.history.forEach(chat => {
+                    addMsg(chat.user_message, "user", chat.id);
+                    addMsg(chat.bot_response, "bot", chat.id);
+                });
+            }
+
+            setActiveSession(id);
+        })
+        .catch(err => console.error("Error loading chat history:", err));
 }
 
+function sendWithOptionalLocation(msg, typingNode) {
+    function sendRequest(payload) {
+        fetch("/chat/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken")
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            typingNode.remove();
+            addMsg(data.response, "bot");
+
+            if (data.session_id) {
+                session_id = data.session_id;
+            }
+
+            loadSessions();
+            setActiveSession(session_id);
+        })
+        .catch(err => {
+            console.error(err);
+            typingNode.remove();
+            addMsg("Something went wrong while sending your message.", "bot");
+        });
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => sendRequest({
+                message: msg,
+                session_id: session_id,
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude
+            }),
+            () => sendRequest({
+                message: msg,
+                session_id: session_id
+            })
+        );
+    } else {
+        sendRequest({
+            message: msg,
+            session_id: session_id
+        });
+    }
+}
+
+function newChatAndSend(msg) {
+    fetch("/new-session/")
+        .then(res => res.json())
+        .then(data => {
+            session_id = data.session_id;
+            clearChatBox();
+            addMsg(msg, "user");
+            const typingNode = addMsg("Typing...", "bot typing");
+            loadSessions();
+            setActiveSession(session_id);
+            sendWithOptionalLocation(msg, typingNode);
+        })
+        .catch(err => {
+            console.error(err);
+            addMsg("Could not start a new chat.", "bot");
+        });
+}
+
+/* SEND MESSAGE */
+function send() {
+    const input = document.getElementById("msg");
+    const msg = input.value.trim();
+
+    if (!msg) return;
+
+    input.value = "";
+
+    if (!session_id) {
+        newChatAndSend(msg);
+        return;
+    }
+
+    addMsg(msg, "user");
+    const typingNode = addMsg("Typing...", "bot typing");
+    sendWithOptionalLocation(msg, typingNode);
+}
+
+/* FAQ QUICK */
+function quickMsg(text) {
+    document.getElementById("msg").value = text;
+    send();
+}
+
+function handleKey(event) {
+    if (event.key === "Enter") {
+        send();
+    }
+}
+
+/* INIT */
+window.onload = function () {
+    const savedTheme = localStorage.getItem("theme");
+
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
+    }
+
+    loadSessions();
+    clearChatBox();
+};
+
+function deleteMessage(messageId) {
+    const confirmDelete = confirm( "Are you sure you want to remove this message from history?");
+
+    if (!confirmDelete) return;
+
+    fetch("/delete-message/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            message_id: messageId
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "success") {
+            loadChat(session_id);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Failed to delete message.");
+    });
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+}
 </script>
 
 </body>
