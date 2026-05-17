@@ -24,7 +24,7 @@ from .groq_ai import get_ai_response
 # 🏠 HOME
 # =========================
 def home(request):
-    return render(request, "index.html")
+    return render(request, "chatbot/chat.html")
 
 
 # =========================
