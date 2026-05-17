@@ -6,21 +6,24 @@
 <title>SafeChoice AI</title>
 <style>
 /* =========================
-   MOBILE RESPONSIVENESS
+   MOBILE RESPONSIVE FIX
 ========================= */
+
 .mobile-menu-btn {
     display: none;
     background: var(--button-main);
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 22px;
 }
 
 @media (max-width: 768px) {
+
     body {
+        width: 100%;
         height: 100vh;
         overflow: hidden;
     }
@@ -28,58 +31,73 @@
     .sidebar {
         position: fixed;
         top: 0;
-        left: -280px;
-        width: 260px;
+        left: 0;
+        width: 280px;
         height: 100vh;
-        z-index: 1000;
-        transition: left 0.3s ease;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
     }
 
     .sidebar.show-sidebar {
-        left: 0;
+        transform: translateX(0);
     }
 
     .main {
         width: 100%;
         height: 100vh;
+        margin-left: 0;
+        flex: 1;
     }
 
     .mobile-menu-btn {
         display: inline-block;
+        flex-shrink: 0;
     }
 
     .top-bar {
-        min-height: 60px;
+        min-height: 76px;
         height: auto;
-        padding: 8px 10px;
+        padding: 10px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
     }
 
     .chat-title {
-        font-size: 14px;
+        font-size: 18px;
+        line-height: 1.2;
         flex: 1;
+        max-width: 130px;
+        word-break: break-word;
     }
 
     .top-right-wrapper {
+        display: flex;
+        flex-direction: column;
         align-items: flex-end;
+        gap: 4px;
     }
 
     .top-right-actions {
-        gap: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: nowrap;
     }
 
     .top-link {
-        padding: 6px 8px;
-        font-size: 12px;
-        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 14px;
+        border-radius: 10px;
+        white-space: nowrap;
     }
 
     .theme-toggle-top {
-        padding: 6px 8px;
-        font-size: 12px;
-        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 16px;
+        border-radius: 10px;
     }
 
     .anonymous-note {
@@ -87,23 +105,18 @@
     }
 
     .chat-box {
-        padding: 12px;
+        padding: 14px;
     }
 
-    .message {
-        max-width: 92%;
-        font-size: 14px;
-        padding: 10px 12px;
-    }
-
+    .message,
     .welcome {
-        max-width: 92%;
-        font-size: 14px;
+        max-width: 95%;
+        font-size: 15px;
     }
 
     .input-area {
-        padding: 8px;
-        gap: 6px;
+        padding: 10px;
+        gap: 8px;
     }
 
     #msg {
@@ -113,7 +126,7 @@
 
     .send-btn {
         padding: 12px 14px;
-        font-size: 13px;
+        font-size: 14px;
     }
 }
 
@@ -494,31 +507,31 @@ body {
 <div class="main">
 
     <div class="top-bar">
-        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
     <div class="chat-title">
         SafeChoice AI
     </div>
+
     <div class="top-right-wrapper">
-    <div class="top-right-actions">
-        {% if user.is_authenticated %}
-            <span class="user-label">Hi, {{ user.username }}</span>
-            <a href="{% url 'logout' %}" class="top-link">Logout</a>
-        {% else %}
-            <a href="{% url 'login' %}" class="top-link">Login</a>
-            <a href="{% url 'signup' %}" class="top-link">Sign Up</a>
+        <div class="top-right-actions">
+            {% if user.is_authenticated %}
+                <span class="user-label">Hi, {{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="top-link">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="top-link">Login</a>
+                <a href="{% url 'signup' %}" class="top-link">Sign Up</a>
+            {% endif %}
+
+            <button class="theme-toggle-top" onclick="toggleTheme()">🌙</button>
+        </div>
+
+        {% if not user.is_authenticated %}
+            <p class="anonymous-note">
+                You can still use the chatbot anonymously.
+            </p>
         {% endif %}
-
-        <button class="theme-toggle-top" onclick="toggleTheme()">
-            🌙
-        </button>
     </div>
-
-    {% if not user.is_authenticated %}
-        <p class="anonymous-note">
-            You can still use the chatbot anonymously.
-        </p>
-    {% endif %}
-</div>
 </div>
 
 <div class="chat-box" id="chatBox">
