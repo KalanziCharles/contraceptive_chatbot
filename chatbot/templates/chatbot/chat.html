@@ -4,182 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SafeChoice AI</title>
+
 <style>
-//* =========================
-   MOBILE SIDEBAR + TITLE FIX
+/* =========================
+   THEME VARIABLES
 ========================= */
-
-.sidebar-mobile-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.close-sidebar-btn {
-    display: none;
-    background: rgba(255,255,255,0.15);
-    color: white;
-    border: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.sidebar-overlay {
-    display: none;
-}
-
-@media (max-width: 768px) {
-
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 84vw;
-        max-width: 330px;
-        height: 100vh;
-        height: 100dvh;
-        z-index: 3000;
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.35);
-    }
-
-    .sidebar.show-sidebar {
-        transform: translateX(0);
-    }
-
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.45);
-        z-index: 2500;
-    }
-
-    .sidebar-overlay.show-overlay {
-        display: block;
-    }
-
-    .close-sidebar-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .sidebar-mobile-header .new-chat {
-        flex: 1;
-        margin-bottom: 0;
-    }
-
-    .top-bar {
-        min-height: 72px;
-        padding: 8px 10px;
-        display: grid;
-        grid-template-columns: 48px 1fr auto;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .mobile-menu-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        padding: 0;
-        font-size: 24px;
-        border-radius: 12px;
-        flex-shrink: 0;
-    }
-
-    .chat-title {
-        font-size: 18px;
-        font-weight: 700;
-        white-space: nowrap;
-        overflow: visible;
-        text-overflow: clip;
-        min-width: 0;
-    }
-
-    .top-right-wrapper {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex-shrink: 0;
-    }
-
-    .top-right-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: nowrap;
-    }
-
-    .top-link {
-        padding: 8px 9px;
-        font-size: 13px;
-        border-radius: 10px;
-        white-space: nowrap;
-    }
-
-    .theme-toggle-top {
-        width: 44px;
-        height: 44px;
-        padding: 0;
-        font-size: 17px;
-        border-radius: 10px;
-        flex-shrink: 0;
-    }
-
-    .anonymous-note {
-        display: none;
-    }
-
-    .main {
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
-    }
-
-    .chat-box {
-        flex: 1;
-        min-height: 0;
-        overflow-y: auto;
-        padding: 16px;
-    }
-
-    .input-area {
-        position: sticky;
-        bottom: 0;
-        z-index: 10;
-        padding: 10px;
-        gap: 8px;
-        background: var(--bg-card);
-    }
-
-    #msg {
-        min-width: 0;
-        height: 52px;
-        font-size: 16px;
-        border-radius: 16px;
-    }
-
-    .send-btn {
-        width: 74px;
-        height: 52px;
-        flex-shrink: 0;
-        border-radius: 16px;
-    }
-}
-
-    :root {
+:root {
     --bg-main: #fff7fb;
     --bg-sidebar: #7c3aed;
     --bg-sidebar-soft: #6d28d9;
@@ -217,26 +47,52 @@ body.dark-mode {
     --input-bg: #2d1b3a;
 }
 
+/* =========================
+   GLOBAL
+========================= */
+* {
+    box-sizing: border-box;
+}
+
+html,
 body {
     margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
     font-family: Arial, sans-serif;
     display: flex;
     height: 100vh;
+    height: 100dvh;
     background: var(--bg-main);
     color: var(--text-main);
+    overflow: hidden;
 }
 
-/* SIDEBAR */
+/* =========================
+   SIDEBAR
+========================= */
 .sidebar {
     width: 280px;
     height: 100vh;
+    height: 100dvh;
     background: var(--bg-sidebar);
     color: var(--text-light);
     display: flex;
     flex-direction: column;
     padding: 12px;
     border-right: 1px solid var(--border-color);
-    overflow: hidden; /* important */
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.sidebar-mobile-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .new-chat {
@@ -244,15 +100,27 @@ body {
     border: none;
     padding: 12px;
     color: white;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     font-size: 14px;
-    margin-bottom: 10px;
-    flex-shrink: 0;
+    flex: 1;
 }
 
 .new-chat:hover {
     background: var(--button-hover);
+}
+
+.close-sidebar-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
 }
 
 .sidebar-section-title {
@@ -263,7 +131,6 @@ body {
     flex-shrink: 0;
 }
 
-/* History should scroll alone */
 .history-section {
     display: flex;
     flex-direction: column;
@@ -275,15 +142,6 @@ body {
     overflow-y: auto;
     min-height: 0;
     padding-right: 4px;
-}
-
-/* FAQ should remain visible */
-.faq-section {
-    flex-shrink: 0;
-    max-height: 240px;
-    overflow-y: auto;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.2);
 }
 
 .chat-item {
@@ -302,6 +160,14 @@ body {
 .chat-item:hover,
 .chat-item.active {
     background: var(--bg-sidebar-soft);
+}
+
+.faq-section {
+    flex-shrink: 0;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .faq-left {
@@ -323,7 +189,13 @@ body {
     background: var(--faq-hover);
 }
 
-/* MAIN */
+.sidebar-overlay {
+    display: none;
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
 .main {
     flex: 1;
     display: flex;
@@ -331,19 +203,150 @@ body {
     background: var(--bg-chat);
     color: var(--text-main);
     min-width: 0;
+    height: 100vh;
+    height: 100dvh;
 }
 
-.chat-header {
-    padding: 16px 20px;
+/* =========================
+   TOP BAR
+========================= */
+.top-bar {
+    min-height: 76px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 18px;
-    font-weight: bold;
     background: var(--bg-card);
     color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
+.mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    font-size: 22px;
+    background: var(--button-main);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.chat-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-right-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 3px;
+}
+
+.top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.top-link {
+    text-decoration: none;
+    background: var(--button-main);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.top-link:hover {
+    background: var(--button-hover);
+}
+
+.anonymous-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* DROPDOWN */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 14px;
+    background: var(--faq-bg);
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.dropdown-btn:hover {
+    background: var(--faq-hover);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 56px;
+    right: 0;
+    width: 200px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    overflow: hidden;
+    z-index: 5000;
+}
+
+.dropdown-menu.show-dropdown {
+    display: block;
+}
+
+.dropdown-menu a,
+.dropdown-menu button {
+    width: 100%;
+    display: block;
+    padding: 12px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    text-align: left;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+    background: var(--bg-bot);
+}
+
+/* =========================
+   CHAT AREA
+========================= */
 .chat-box {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 24px;
     display: flex;
@@ -355,14 +358,15 @@ body {
     color: var(--text-main);
     background: var(--bg-bot);
     padding: 14px 16px;
-    border-radius: 14px;
+    border-radius: 16px;
     max-width: 760px;
+    line-height: 1.5;
 }
 
 .message {
     max-width: 75%;
     padding: 12px 14px;
-    border-radius: 14px;
+    border-radius: 16px;
     line-height: 1.5;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -385,20 +389,36 @@ body {
     opacity: 0.8;
 }
 
-/* INPUT */
+.remove-history-btn {
+    margin-top: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #f87171;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0;
+    text-align: left;
+}
+
+/* =========================
+   INPUT AREA
+========================= */
 .input-area {
     display: flex;
     gap: 10px;
     padding: 14px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-card);
+    flex-shrink: 0;
 }
 
 #msg {
     flex: 1;
+    min-width: 0;
     padding: 14px;
     border: 1px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: 14px;
     outline: none;
     font-size: 14px;
     background: var(--input-bg);
@@ -414,119 +434,187 @@ body {
     border: none;
     background: var(--button-main);
     color: white;
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer;
     font-size: 14px;
+    flex-shrink: 0;
 }
 
 .send-btn:hover {
     background: var(--button-hover);
 }
 
-/* TOP BAR */
-.top-bar {
-    height: 64px;
-    padding: 10px 18px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
-}
-
-.chat-title {
-    font-size: 17px;
-    font-weight: bold;
-}
-
-.top-right-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
-
-.top-link {
-    text-decoration: none;
-    background: var(--button-main);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 14px;
-}
-
-.top-link:hover {
-    background: var(--button-hover);
-}
-
-.theme-toggle-top {
-    background: var(--faq-bg);
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.theme-toggle-top:hover {
-    background: var(--faq-hover);
-}
-
-.user-label {
-    font-size: 14px;
-    color: var(--text-main);
-    font-weight: 600;
-}
-
-.top-right-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-.top-right-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.anonymous-note {
-    margin: 0;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
+/* =========================
+   MOBILE RESPONSIVE FIX
+========================= */
 @media (max-width: 768px) {
+    body {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 84vw;
+        max-width: 330px;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 3000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.35);
+    }
+
+    .sidebar.show-sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 2500;
+    }
+
+    .sidebar-overlay.show-overlay {
+        display: block;
+    }
+
+    .close-sidebar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .faq-section {
+        max-height: 260px;
+    }
+
+    .main {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .mobile-menu-btn {
+        display: inline-flex;
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        font-size: 22px;
+    }
+
     .top-bar {
-    min-height: 64px;
-    padding: 10px 18px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-card);
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 15px;
+        min-height: 76px;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .chat-title {
+        font-size: 18px;
+    }
+
+    .top-link {
+        padding: 8px 12px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    .dropdown-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font-size: 22px;
+    }
+
+    .anonymous-note {
+        font-size: 11px;
+        max-width: 180px;
+        white-space: normal;
+        line-height: 1.2;
+    }
+
+    .chat-box {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding: 16px;
+        padding-bottom: 20px;
+    }
+
+    .message,
+    .welcome {
+        max-width: 95%;
+        font-size: 16px;
+        line-height: 1.45;
+    }
+
+    .input-area {
+        padding: 10px;
+        gap: 8px;
+        display: flex;
+        align-items: center;
+        background: var(--bg-card);
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+    }
+
+    #msg {
+        height: 52px;
+        padding: 12px 14px;
+        font-size: 16px;
+        border-radius: 16px;
+    }
+
+    .send-btn {
+        width: 74px;
+        height: 52px;
+        padding: 0;
+        font-size: 15px;
+        border-radius: 16px;
+    }
 }
 
-    .top-right-actions {
-        margin-left: 0;
-        flex-wrap: wrap;
+@media (max-width: 390px) {
+    .chat-title {
+        font-size: 16px;
+    }
+
+    .top-link {
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+
+    .dropdown-btn,
+    .mobile-menu-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    .anonymous-note {
+        max-width: 150px;
+        font-size: 10.5px;
     }
 }
 </style>
 </head>
+
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
     <div class="sidebar-mobile-header">
-    <button class="new-chat" onclick="newChat()">+ New Chat</button>
-    <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
-</div>
+        <button class="new-chat" onclick="newChat()">+ New Chat</button>
+        <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+    </div>
 
     <div class="history-section">
         <div class="sidebar-section-title">History</div>
@@ -555,54 +643,72 @@ body {
         </div>
     </div>
 </div>
+
 <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
+<!-- MAIN -->
 <div class="main">
-    
-<div class="top-bar">
-    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 
-    <div class="chat-title">
-        SafeChoice AI
-    </div>
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 
-    <div class="top-right-wrapper">
-        <div class="top-right-actions">
-            {% if user.is_authenticated %}
-                <span class="user-label">Hi, {{ user.username }}</span>
-                <a href="{% url 'logout' %}" class="top-link">Logout</a>
-            {% else %}
-                <a href="{% url 'login' %}" class="top-link">Login</a>
-                <a href="{% url 'signup' %}" class="top-link">Sign Up</a>
+        <div class="chat-title">
+            SafeChoice AI
+        </div>
+
+        <div class="top-right-group">
+            <div class="top-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="top-link">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="top-link">Login</a>
+                {% endif %}
+
+                <div class="dropdown">
+                    <button class="dropdown-btn" onclick="toggleDropdown(event)">⋮</button>
+
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        {% if not user.is_authenticated %}
+                            <a href="{% url 'signup' %}">Sign Up</a>
+                        {% endif %}
+
+                        <button onclick="toggleTheme(); closeDropdown();">
+                            🌙 Toggle Dark Mode
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {% if not user.is_authenticated %}
+                <p class="anonymous-note">
+                    You can still use the chatbot anonymously.
+                </p>
             {% endif %}
-
-            <button class="theme-toggle-top" onclick="toggleTheme()">🌙</button>
         </div>
-
-        {% if not user.is_authenticated %}
-            <p class="anonymous-note">
-                You can still use the chatbot anonymously.
-            </p>
-        {% endif %}
     </div>
-</div>
 
-<div class="chat-box" id="chatBox">
+    <!-- CHAT BOX -->
+    <div class="chat-box" id="chatBox">
         <div class="welcome">
-            Hello! Ask me about contraceptive methods, side effects, and nearby health facilities.
+            Hello 👋 Ask me about contraceptive methods, side effects, and nearby health facilities.
         </div>
     </div>
 
+    <!-- INPUT -->
     <div class="input-area">
         <input id="msg" type="text" placeholder="Ask anything..." onkeydown="handleKey(event)">
         <button class="send-btn" onclick="send()">Send</button>
     </div>
+
 </div>
 
 <script>
 let session_id = null;
 
-/* CSRF */
+/* =========================
+   CSRF
+========================= */
 function getCookie(name) {
     let value = null;
     document.cookie.split(";").forEach(cookie => {
@@ -614,7 +720,51 @@ function getCookie(name) {
     return value;
 }
 
-/* UI HELPERS */
+/* =========================
+   SIDEBAR
+========================= */
+function toggleSidebar() {
+    document.querySelector(".sidebar").classList.toggle("show-sidebar");
+    document.querySelector(".sidebar-overlay").classList.toggle("show-overlay");
+}
+
+function closeSidebar() {
+    document.querySelector(".sidebar").classList.remove("show-sidebar");
+    document.querySelector(".sidebar-overlay").classList.remove("show-overlay");
+}
+
+/* =========================
+   DROPDOWN
+========================= */
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("dropdownMenu").classList.toggle("show-dropdown");
+}
+
+function closeDropdown() {
+    document.getElementById("dropdownMenu").classList.remove("show-dropdown");
+}
+
+document.addEventListener("click", function () {
+    closeDropdown();
+});
+
+/* =========================
+   THEME
+========================= */
+function toggleTheme() {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+}
+
+/* =========================
+   UI HELPERS
+========================= */
 function clearChatBox() {
     document.getElementById("chatBox").innerHTML = `
         <div class="welcome">
@@ -629,25 +779,12 @@ function addMsg(text, type, messageId = null) {
 
     const content = document.createElement("div");
     content.innerText = text;
-
     div.appendChild(content);
 
-    // Professional remove button
     if (messageId) {
         const deleteBtn = document.createElement("button");
-
         deleteBtn.innerText = "Remove from History";
-
-        deleteBtn.style.marginTop = "10px";
-        deleteBtn.style.background = "transparent";
-        deleteBtn.style.border = "none";
-        deleteBtn.style.cursor = "pointer";
-        deleteBtn.style.color = "#f87171";
-        deleteBtn.style.fontSize = "13px";
-        deleteBtn.style.fontWeight = "500";
-        deleteBtn.style.padding = "0";
-        deleteBtn.style.textAlign = "left";
-
+        deleteBtn.className = "remove-history-btn";
         deleteBtn.onclick = function () {
             deleteMessage(messageId);
         };
@@ -676,10 +813,9 @@ function truncateTitle(text) {
     return text.length > 32 ? text.slice(0, 32) + "..." : text;
 }
 
-/* NEW CHAT
-   Do NOT create a backend session yet.
-   A real session is created only when the first message is sent.
-*/
+/* =========================
+   CHAT SESSIONS
+========================= */
 function newChat() {
     session_id = null;
     clearChatBox();
@@ -688,9 +824,10 @@ function newChat() {
     document.querySelectorAll(".chat-item").forEach(item => {
         item.classList.remove("active");
     });
+
+    closeSidebar();
 }
 
-/* LOAD SESSIONS */
 function loadSessions() {
     fetch("/sessions/")
         .then(res => res.json())
@@ -717,7 +854,6 @@ function loadSessions() {
         .catch(err => console.error("Error loading sessions:", err));
 }
 
-/* LOAD CHAT HISTORY */
 function loadChat(id) {
     session_id = id;
 
@@ -745,6 +881,9 @@ function loadChat(id) {
         .catch(err => console.error("Error loading chat history:", err));
 }
 
+/* =========================
+   SEND MESSAGE
+========================= */
 function sendWithOptionalLocation(msg, typingNode) {
     function sendRequest(payload) {
         fetch("/chat/", {
@@ -813,7 +952,6 @@ function newChatAndSend(msg) {
         });
 }
 
-/* SEND MESSAGE */
 function send() {
     const input = document.getElementById("msg");
     const msg = input.value.trim();
@@ -832,7 +970,6 @@ function send() {
     sendWithOptionalLocation(msg, typingNode);
 }
 
-/* FAQ QUICK */
 function quickMsg(text) {
     document.getElementById("msg").value = text;
     closeSidebar();
@@ -845,20 +982,13 @@ function handleKey(event) {
     }
 }
 
-/* INIT */
-window.onload = function () {
-    const savedTheme = localStorage.getItem("theme");
-
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark-mode");
-    }
-
-    loadSessions();
-    clearChatBox();
-};
-
+/* =========================
+   DELETE SINGLE MESSAGE
+========================= */
 function deleteMessage(messageId) {
-    const confirmDelete = confirm( "Are you sure you want to remove this message from history?");
+    const confirmDelete = confirm(
+        "Are you sure you want to remove this message from history?"
+    );
 
     if (!confirmDelete) return;
 
@@ -876,35 +1006,30 @@ function deleteMessage(messageId) {
     .then(data => {
         if (data.status === "success") {
             loadChat(session_id);
+            loadSessions();
         } else {
-            alert(data.message);
+            alert(data.message || "Failed to remove message from history.");
         }
     })
     .catch(err => {
         console.error(err);
-        alert("Failed to delete message.");
+        alert("Failed to remove message from history.");
     });
 }
 
-function toggleTheme() {
-    document.body.classList.toggle("dark-mode");
+/* =========================
+   INIT
+========================= */
+window.onload = function () {
+    const savedTheme = localStorage.getItem("theme");
 
-    if (document.body.classList.contains("dark-mode")) {
-        localStorage.setItem("theme", "dark");
-    } else {
-        localStorage.setItem("theme", "light");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark-mode");
     }
-}
 
-function toggleSidebar() {
-    document.querySelector(".sidebar").classList.toggle("show-sidebar");
-    document.querySelector(".sidebar-overlay").classList.toggle("show-overlay");
-}
-
-function closeSidebar() {
-    document.querySelector(".sidebar").classList.remove("show-sidebar");
-    document.querySelector(".sidebar-overlay").classList.remove("show-overlay");
-}
+    loadSessions();
+    clearChatBox();
+};
 </script>
 
 </body>
