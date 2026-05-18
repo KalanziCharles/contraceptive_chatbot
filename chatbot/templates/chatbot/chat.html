@@ -5,39 +5,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SafeChoice AI</title>
 <style>
-/* =========================
-   FINAL MOBILE RESPONSIVE FIX
+//* =========================
+   MOBILE SIDEBAR + TITLE FIX
 ========================= */
+
+.sidebar-mobile-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.close-sidebar-btn {
+    display: none;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.sidebar-overlay {
+    display: none;
+}
+
 @media (max-width: 768px) {
-    body {
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
-    }
 
     .sidebar {
         position: fixed;
         top: 0;
         left: 0;
-        width: 280px;
+        width: 84vw;
+        max-width: 330px;
         height: 100vh;
         height: 100dvh;
-        z-index: 2000;
+        z-index: 3000;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
         overflow-y: auto;
+        box-shadow: 10px 0 30px rgba(0,0,0,0.35);
     }
 
     .sidebar.show-sidebar {
         transform: translateX(0);
     }
 
-    .main {
-        width: 100%;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden;
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 2500;
+    }
+
+    .sidebar-overlay.show-overlay {
+        display: block;
+    }
+
+    .close-sidebar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .sidebar-mobile-header .new-chat {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .top-bar {
+        min-height: 72px;
+        padding: 8px 10px;
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        align-items: center;
+        gap: 8px;
     }
 
     .mobile-menu-btn {
@@ -47,35 +93,24 @@
         width: 48px;
         height: 48px;
         padding: 0;
-        flex-shrink: 0;
         font-size: 24px;
-        background: var(--button-main);
-        color: white;
-        border: none;
         border-radius: 12px;
-        cursor: pointer;
-    }
-
-    .top-bar {
-        min-height: 72px;
-        height: auto;
-        padding: 10px 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        flex-shrink: 0;
     }
 
     .chat-title {
         font-size: 18px;
-        line-height: 1.2;
-        flex: 1;
-        min-width: 0;
+        font-weight: 700;
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
+        text-overflow: clip;
+        min-width: 0;
     }
 
     .top-right-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
         flex-shrink: 0;
     }
 
@@ -87,22 +122,30 @@
     }
 
     .top-link {
-        padding: 9px 10px;
-        font-size: 14px;
-        border-radius: 12px;
+        padding: 8px 9px;
+        font-size: 13px;
+        border-radius: 10px;
         white-space: nowrap;
     }
 
     .theme-toggle-top {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         padding: 0;
-        font-size: 18px;
-        border-radius: 12px;
+        font-size: 17px;
+        border-radius: 10px;
+        flex-shrink: 0;
     }
 
     .anonymous-note {
         display: none;
+    }
+
+    .main {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
     }
 
     .chat-box {
@@ -110,32 +153,20 @@
         min-height: 0;
         overflow-y: auto;
         padding: 16px;
-        padding-bottom: 20px;
-    }
-
-    .message,
-    .welcome {
-        max-width: 95%;
-        font-size: 16px;
-        line-height: 1.45;
     }
 
     .input-area {
-        padding: 10px;
-        gap: 8px;
-        display: flex;
-        align-items: center;
-        background: var(--bg-card);
         position: sticky;
         bottom: 0;
         z-index: 10;
+        padding: 10px;
+        gap: 8px;
+        background: var(--bg-card);
     }
 
     #msg {
-        flex: 1;
         min-width: 0;
         height: 52px;
-        padding: 12px 14px;
         font-size: 16px;
         border-radius: 16px;
     }
@@ -143,10 +174,8 @@
     .send-btn {
         width: 74px;
         height: 52px;
-        padding: 0;
-        font-size: 15px;
-        border-radius: 16px;
         flex-shrink: 0;
+        border-radius: 16px;
     }
 }
 
@@ -494,7 +523,10 @@ body {
 <body>
 
 <div class="sidebar">
+    <div class="sidebar-mobile-header">
     <button class="new-chat" onclick="newChat()">+ New Chat</button>
+    <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+</div>
 
     <div class="history-section">
         <div class="sidebar-section-title">History</div>
@@ -523,10 +555,11 @@ body {
         </div>
     </div>
 </div>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="main">
-
-    <div class="top-bar">
+    
+<div class="top-bar">
     <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
 
     <div class="chat-title">
@@ -672,10 +705,7 @@ function loadSessions() {
                 div.innerText = truncateTitle(session.title);
                 div.onclick = () => {
                     loadChat(session.id);
-
-                    if (window.innerWidth <= 768) {
-                        document.querySelector(".sidebar").classList.remove("show-sidebar");
-                    }
+                    closeSidebar();
                 };
                 list.appendChild(div);
             });
@@ -805,11 +835,7 @@ function send() {
 /* FAQ QUICK */
 function quickMsg(text) {
     document.getElementById("msg").value = text;
-
-    if (window.innerWidth <= 768) {
-        document.querySelector(".sidebar").classList.remove("show-sidebar");
-    }
-
+    closeSidebar();
     send();
 }
 
@@ -872,6 +898,12 @@ function toggleTheme() {
 
 function toggleSidebar() {
     document.querySelector(".sidebar").classList.toggle("show-sidebar");
+    document.querySelector(".sidebar-overlay").classList.toggle("show-overlay");
+}
+
+function closeSidebar() {
+    document.querySelector(".sidebar").classList.remove("show-sidebar");
+    document.querySelector(".sidebar-overlay").classList.remove("show-overlay");
 }
 </script>
 
