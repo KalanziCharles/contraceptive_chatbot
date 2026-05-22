@@ -605,125 +605,146 @@ def chatbot_response(request):
         response_parts = []
 
         # =====================================
-        # FACILITY QUERYSET
+        # FACILITY SEARCH
         # =====================================
-        facility_queryset = HealthFacility.objects.all()
+
+        facility_keywords = [
+            "family planning",
+            "contraceptive",
+            "reproductive",
+            "women",
+            "maternal",
+            "antenatal"
+        ]
+
+        facility_queryset = HealthFacility.objects.none()
+
+        for keyword in facility_keywords:
+            facility_queryset = (
+                facility_queryset |
+                HealthFacility.objects.filter(
+                    services__icontains=keyword
+                )
+            )
+
+        facility_queryset = facility_queryset.distinct()
+
+        # fallback
+        if not facility_queryset.exists():
+            facility_queryset = HealthFacility.objects.all()[:5]
 
         # =====================================
-        # FACILITY RESPONSE
+        # FACILITY RESPONSES
         # =====================================
-        facility_response_added = False
 
-        if (
-            "facility" in intents
-            or
-            "nearest_facility" in intents
-        ):
+        facility_response_given = False
 
-            facilities = list(facility_queryset[:5])
+        if any(i in intents for i in [
+            "facility",
+            "nearest_facility",
+            "free_facility",
+            "private_facility"
+        ]):
+
+            facilities_to_show = []
 
             # ---------------------------------
-            # CASE 1: USER ALLOWED LOCATION
+            # FILTERS
             # ---------------------------------
+
+            if "free_facility" in intents:
+                facility_queryset = facility_queryset.filter(
+                    offers_free_services=True
+                )
+
+            if "private_facility" in intents:
+                facility_queryset = facility_queryset.filter(
+                    facility_type__iexact="private"
+                )
+
+            # ---------------------------------
+            # USE GEOLOCATION IF AVAILABLE
+            # ---------------------------------
+
             if user_lat and user_lon:
 
-                ranked = []
+                nearby = []
 
-                for facility in facilities:
+                for facility in facility_queryset:
 
                     if (
-                        facility.latitude is not None
-                        and
+                        facility.latitude is not None and
                         facility.longitude is not None
                     ):
 
-                        distance = calculate_distance(
-                            float(user_lat),
-                            float(user_lon),
-                            float(facility.latitude),
-                            float(facility.longitude)
-                        )
+                        try:
 
-                        ranked.append(
-                            (distance, facility)
-                        )
+                            distance = calculate_distance(
+                                float(user_lat),
+                                float(user_lon),
+                                float(facility.latitude),
+                                float(facility.longitude)
+                            )
 
-                ranked.sort(key=lambda x: x[0])
+                            nearby.append((distance, facility))
 
-                if ranked:
+                        except:
+                            continue
 
-                    text = (
-                        "🏥 Nearby reproductive "
-                        "health facilities:\n\n"
-                    )
+                nearby.sort(key=lambda x: x[0])
 
-                    for distance, facility in ranked[:3]:
+                facilities_to_show = nearby[:3]
 
-                        text += (
+                if facilities_to_show:
+
+                    response = "🏥 Nearby reproductive health facilities:\n\n"
+
+                    for distance, facility in facilities_to_show:
+
+                        response += (
                             f"{facility.name}\n"
                             f"📍 {facility.location}\n"
                             f"🩺 {facility.services}\n"
                             f"📏 {distance:.2f} km away\n\n"
                         )
 
-                    response_parts.append(
-                        text.strip()
-                    )
+                    response_parts.append(response)
 
-                else:
+                    facility_response_given = True
 
-                    response_parts.append(
-                        "I could not calculate nearby "
-                        "facilities, but here are "
-                        "some available reproductive "
-                        "health facilities:\n"
+            # ---------------------------------
+            # FALLBACK WITHOUT GEOLOCATION
+            # ---------------------------------
+
+            if not facility_response_given:
+
+                facilities = facility_queryset[:5]
+
+                if facilities.exists():
+
+                    response = (
+                        "🏥 Available reproductive health facilities:\n\n"
                     )
 
                     for facility in facilities:
 
-                        response_parts.append(
-                            f"\n🏥 {facility.name}"
-                            f"\n📍 {facility.location}"
-                            f"\n🩺 {facility.services}"
-                        )
-
-            # ---------------------------------
-            # CASE 2: NO LOCATION ACCESS
-            # ---------------------------------
-            else:
-
-                if facilities:
-
-                    text = (
-                        "🏥 Available reproductive "
-                        "health facilities:\n\n"
-                    )
-
-                    for facility in facilities:
-
-                        text += (
+                        response += (
                             f"{facility.name}\n"
                             f"📍 {facility.location}\n"
                             f"🩺 {facility.services}\n\n"
                         )
 
-                    text += (
-                        "📍 Enable location access "
-                        "for nearby distance estimates."
-                    )
+                    response_parts.append(response)
 
-                    response_parts.append(
-                        text.strip()
-                    )
+                    facility_response_given = True
 
                 else:
 
                     response_parts.append(
-                        "I could not find reproductive "
-                        "health facilities at the moment."
+                        "I could not find reproductive health facilities at the moment."
                     )
 
-            facility_response_added = True
+                    facility_response_given = True
 
         # =====================================
         # AI RESPONSE
@@ -781,6 +802,8 @@ IMPORTANT:
 USER MESSAGE:
 {message}
 """
+
+        if not facility_response_given:
 
             ai_response = get_ai_response(
                 message,
