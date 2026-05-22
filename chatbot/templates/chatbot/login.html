@@ -6,210 +6,238 @@
 <title>Login | SafeChoice AI</title>
 
 <style>
-:root {
-    --bg-main: #fff7fb;
-    --bg-card: #ffffff;
-    --bg-bot: #f3e8ff;
-    --bg-user: #ec4899;
-    --text-main: #2d1b35;
-    --text-muted: #6b7280;
-    --border-color: #f0d5ff;
-    --button-main: #ec4899;
-    --button-hover: #db2777;
-    --faq-bg: #8b5cf6;
+
+:root{
+    --bg-main:#fff7fb;
+    --bg-card:#ffffff;
+    --bg-soft:#f3e8ff;
+    --text-main:#2d1b35;
+    --text-muted:#6b7280;
+    --border:#f0d5ff;
+    --primary:#ec4899;
+    --primary-hover:#db2777;
+    --shadow:0 10px 30px rgba(0,0,0,0.08);
 }
 
-* {
-    box-sizing: border-box;
+body.dark-mode{
+    --bg-main:#1f1029;
+    --bg-card:#2d1b3a;
+    --bg-soft:#3b2a4a;
+    --text-main:#f9e8ff;
+    --text-muted:#d8b4fe;
+    --border:#4c1d5f;
+    --primary:#ec4899;
+    --primary-hover:#f472b6;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #fff7fb, #f3e8ff);
-    min-height: 100vh;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+*{
+    box-sizing:border-box;
 }
 
-.auth-container {
-    width: 100%;
-    max-width: 430px;
+body{
+    margin:0;
+    min-height:100vh;
+    font-family:Arial,sans-serif;
+    background:var(--bg-main);
+    color:var(--text-main);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
 }
 
-.auth-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 28px;
-    box-shadow: 0 20px 50px rgba(124, 58, 237, 0.18);
+.auth-container{
+    width:100%;
+    max-width:430px;
 }
 
-.logo {
-    text-align: center;
-    margin-bottom: 18px;
+.auth-card{
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:28px;
+    padding:36px 30px;
+    box-shadow:var(--shadow);
 }
 
-.logo h1 {
-    margin: 0;
-    font-size: 26px;
-    color: var(--text-main);
+.logo-badge{
+    display:inline-block;
+    background:var(--primary);
+    color:white;
+    padding:8px 16px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:18px;
 }
 
-.logo p {
-    margin: 8px 0 0;
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1.5;
+.auth-title{
+    font-size:32px;
+    font-weight:800;
+    margin-bottom:10px;
 }
 
-.auth-title {
-    font-size: 22px;
-    margin: 18px 0 6px;
-    text-align: center;
+.auth-subtitle{
+    color:var(--text-muted);
+    line-height:1.6;
+    margin-bottom:28px;
+    font-size:15px;
 }
 
-.auth-subtitle {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 14px;
-    margin-bottom: 22px;
+.form-group{
+    margin-bottom:18px;
 }
 
-form p {
-    margin-bottom: 14px;
+.form-group label{
+    display:block;
+    margin-bottom:8px;
+    font-size:14px;
+    font-weight:600;
 }
 
-form label {
-    display: block;
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 6px;
+.form-group input{
+    width:100%;
+    padding:15px;
+    border-radius:16px;
+    border:1px solid var(--border);
+    background:var(--bg-soft);
+    color:var(--text-main);
+    font-size:15px;
+    outline:none;
 }
 
-form input {
-    width: 100%;
-    padding: 13px 14px;
-    border-radius: 14px;
-    border: 1px solid var(--border-color);
-    outline: none;
-    background: #fff;
-    color: var(--text-main);
-    font-size: 15px;
+.form-group input:focus{
+    border-color:var(--primary);
 }
 
-form input:focus {
-    border-color: var(--button-main);
-    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.15);
+.auth-btn{
+    width:100%;
+    border:none;
+    background:var(--primary);
+    color:white;
+    padding:15px;
+    border-radius:16px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:10px;
 }
 
-ul.errorlist {
-    color: #dc2626;
-    font-size: 13px;
-    margin: 6px 0;
-    padding-left: 18px;
+.auth-btn:hover{
+    background:var(--primary-hover);
 }
 
-.auth-btn {
-    width: 100%;
-    border: none;
-    background: var(--button-main);
-    color: white;
-    padding: 14px;
-    border-radius: 16px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 6px;
+.auth-footer{
+    margin-top:24px;
+    text-align:center;
+    color:var(--text-muted);
+    font-size:14px;
 }
 
-.auth-btn:hover {
-    background: var(--button-hover);
+.auth-footer a{
+    color:var(--primary);
+    text-decoration:none;
+    font-weight:700;
 }
 
-.auth-links {
-    margin-top: 20px;
-    text-align: center;
-    display: grid;
-    gap: 10px;
+.back-home{
+    display:inline-block;
+    margin-top:18px;
+    color:var(--text-muted);
+    text-decoration:none;
+    font-size:14px;
 }
 
-.auth-links a {
-    color: var(--faq-bg);
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
+.errorlist{
+    list-style:none;
+    padding:0;
+    margin:8px 0 0;
+    color:#ef4444;
+    font-size:13px;
 }
 
-.auth-links a:hover {
-    text-decoration: underline;
-}
+@media(max-width:480px){
 
-.privacy-note {
-    background: var(--bg-bot);
-    padding: 12px 14px;
-    border-radius: 16px;
-    font-size: 13px;
-    color: var(--text-main);
-    line-height: 1.5;
-    margin-bottom: 18px;
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 14px;
-        align-items: flex-start;
+    .auth-card{
+        padding:28px 22px;
+        border-radius:24px;
     }
 
-    .auth-card {
-        padding: 22px;
-        border-radius: 20px;
-        margin-top: 18px;
-    }
-
-    .logo h1 {
-        font-size: 24px;
+    .auth-title{
+        font-size:26px;
     }
 }
+
 </style>
 </head>
 
 <body>
 
 <div class="auth-container">
+
     <div class="auth-card">
 
-        <div class="logo">
-            <h1>SafeChoice AI</h1>
+        <div class="logo-badge">
+            SafeChoice AI
         </div>
 
-        <h2 class="auth-title">Welcome Back</h2>
-        <p class="auth-subtitle">
-            Login only if you want to save and access your chats later.
-        </p>
-
-        <div class="privacy-note">
-            You can continue using the chatbot anonymously without logging in.
+        <div class="auth-title">
+            Welcome Back 👋
         </div>
 
-        <form method="post">
+        <div class="auth-subtitle">
+            Login to continue your contraceptive health conversations and access your saved chat history.
+        </div>
+
+        <form method="POST">
+
             {% csrf_token %}
-            {{ form.as_p }}
+
+            <div class="form-group">
+                <label>Username</label>
+                {{ form.username }}
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                {{ form.password }}
+            </div>
+
+            {% if form.errors %}
+            <ul class="errorlist">
+                <li>Invalid username or password.</li>
+            </ul>
+            {% endif %}
 
             <button type="submit" class="auth-btn">
                 Login
             </button>
+
         </form>
 
-        <div class="auth-links">
-            <a href="{% url 'signup' %}">Create an optional account</a>
-            <a href="{% url 'chat_ui' %}">Continue as guest</a>
+        <div class="auth-footer">
+            Don’t have an account?
+            <a href="{% url 'signup' %}">
+                Create Account
+            </a>
         </div>
 
+        <a href="{% url 'chat_ui' %}" class="back-home">
+            ← Back to Chat
+        </a>
+
     </div>
+
 </div>
+
+<script>
+
+const savedTheme = localStorage.getItem("theme");
+
+if(savedTheme === "dark"){
+    document.body.classList.add("dark-mode");
+}
+
+</script>
 
 </body>
 </html>
