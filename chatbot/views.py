@@ -632,42 +632,35 @@ def chatbot_response(request):
             "nearest_facility" in intents
         ):
 
-            if not user_lat or not user_lon:
+            facilities = list(facility_queryset[:5])
 
-                response_parts.append(
-                    "Please allow location access so I can "
-                    "find nearby reproductive health facilities."
-                )
-
-                facility_response_added = True
-
-            else:
+            # ---------------------------------
+            # CASE 1: USER ALLOWED LOCATION
+            # ---------------------------------
+            if user_lat and user_lon:
 
                 ranked = []
 
-                for facility in facility_queryset:
+                for facility in facilities:
 
                     if (
-                        facility.latitude is None
-                        or
-                        facility.longitude is None
+                        facility.latitude is not None
+                        and
+                        facility.longitude is not None
                     ):
-                        continue
 
-                    distance = calculate_distance(
-                        float(user_lat),
-                        float(user_lon),
-                        float(facility.latitude),
-                        float(facility.longitude)
-                    )
+                        distance = calculate_distance(
+                            float(user_lat),
+                            float(user_lon),
+                            float(facility.latitude),
+                            float(facility.longitude)
+                        )
 
-                    ranked.append(
-                        (distance, facility)
-                    )
+                        ranked.append(
+                            (distance, facility)
+                        )
 
-                ranked.sort(
-                    key=lambda x: x[0]
-                )
+                ranked.sort(key=lambda x: x[0])
 
                 if ranked:
 
@@ -685,18 +678,64 @@ def chatbot_response(request):
                             f"📏 {distance:.2f} km away\n\n"
                         )
 
-                    response_parts.append(text.strip())
-
-                    facility_response_added = True
+                    response_parts.append(
+                        text.strip()
+                    )
 
                 else:
 
                     response_parts.append(
-                        "I could not find nearby reproductive "
+                        "I could not calculate nearby "
+                        "facilities, but here are "
+                        "some available reproductive "
+                        "health facilities:\n"
+                    )
+
+                    for facility in facilities:
+
+                        response_parts.append(
+                            f"\n🏥 {facility.name}"
+                            f"\n📍 {facility.location}"
+                            f"\n🩺 {facility.services}"
+                        )
+
+            # ---------------------------------
+            # CASE 2: NO LOCATION ACCESS
+            # ---------------------------------
+            else:
+
+                if facilities:
+
+                    text = (
+                        "🏥 Available reproductive "
+                        "health facilities:\n\n"
+                    )
+
+                    for facility in facilities:
+
+                        text += (
+                            f"{facility.name}\n"
+                            f"📍 {facility.location}\n"
+                            f"🩺 {facility.services}\n\n"
+                        )
+
+                    text += (
+                        "📍 Enable location access "
+                        "for nearby distance estimates."
+                    )
+
+                    response_parts.append(
+                        text.strip()
+                    )
+
+                else:
+
+                    response_parts.append(
+                        "I could not find reproductive "
                         "health facilities at the moment."
                     )
 
-                    facility_response_added = True
+            facility_response_added = True
 
         # =====================================
         # AI RESPONSE

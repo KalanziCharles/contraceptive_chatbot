@@ -1060,25 +1060,47 @@ function sendWithOptionalLocation(msg, typingNode) {
 
         navigator.geolocation.getCurrentPosition(
 
-            pos => sendRequest({
-                message: msg,
-                session_id: isAuthenticated ? session_id : null,
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude
-            }),
+            // SUCCESS
+            pos => {
 
-            () => sendRequest({
-                message: msg,
-                session_id: isAuthenticated ? session_id : null
-            })
+                sendRequest({
+                    message: msg,
+                    session_id: isAuthenticated ? session_id : null,
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude
+                });
+
+            },
+
+            // ERROR / DENIED
+            err => {
+
+                console.log("Location error:", err);
+
+                // fallback without location
+                sendRequest({
+                    message: msg,
+                    session_id: isAuthenticated ? session_id : null
+                });
+
+            },
+
+            // OPTIONS
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
         );
 
     } else {
 
+        // Browser doesn't support geolocation
         sendRequest({
             message: msg,
             session_id: isAuthenticated ? session_id : null
         });
+
     }
 }
 
