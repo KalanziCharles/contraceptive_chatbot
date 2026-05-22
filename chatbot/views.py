@@ -607,19 +607,7 @@ def chatbot_response(request):
         # =====================================
         # FACILITY QUERYSET
         # =====================================
-        facility_queryset = (
-            HealthFacility.objects.filter(
-                services__icontains="family planning"
-            )
-            |
-            HealthFacility.objects.filter(
-                services__icontains="contraceptive"
-            )
-            |
-            HealthFacility.objects.filter(
-                services__icontains="reproductive"
-            )
-        ).distinct()
+        facility_queryset = HealthFacility.objects.all()
 
         # =====================================
         # FACILITY RESPONSE
