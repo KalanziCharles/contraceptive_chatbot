@@ -11,7 +11,6 @@ import json
 import math
 
 from .forms import SignUpForm
-
 from .models import (
     ChatHistory,
     ContraceptiveMethod,
@@ -22,24 +21,24 @@ from .models import (
 from .groq_ai import get_ai_response
 
 
-# =========================
+# =========================================
 # 🏠 HOME
-# =========================
+# =========================================
 def home(request):
     return render(request, "chatbot/chat.html")
 
 
-# =========================
+# =========================================
 # 💬 CHAT UI
-# =========================
+# =========================================
 @ensure_csrf_cookie
 def chat_ui(request):
     return render(request, "chatbot/chat.html")
 
 
-# =========================
+# =========================================
 # 🔐 SIGNUP
-# =========================
+# =========================================
 def signup_view(request):
 
     if request.user.is_authenticated:
@@ -71,9 +70,9 @@ def signup_view(request):
     )
 
 
-# =========================
+# =========================================
 # 🔐 LOGIN
-# =========================
+# =========================================
 def login_view(request):
 
     if request.user.is_authenticated:
@@ -102,23 +101,23 @@ def login_view(request):
     )
 
 
-# =========================
+# =========================================
 # 🚪 LOGOUT
-# =========================
+# =========================================
 def logout_view(request):
     logout(request)
     return redirect("chat_ui")
 
 
-# =========================
-# 📂 GET USER SESSIONS
-# =========================
+# =========================================
+# 📂 GET SESSIONS
+# =========================================
 @login_required
 def get_sessions(request):
 
     sessions = ChatSession.objects.filter(
         user=request.user
-    ).order_by("-id")
+    ).order_by("-updated_at", "-id")
 
     data = []
 
@@ -130,8 +129,7 @@ def get_sessions(request):
 
         title = (
             first_chat.user_message[:40]
-            if first_chat
-            else "New Chat"
+            if first_chat else "New Chat"
         )
 
         data.append({
@@ -144,9 +142,9 @@ def get_sessions(request):
     })
 
 
-# =========================
-# ➕ CREATE NEW SESSION
-# =========================
+# =========================================
+# ➕ NEW SESSION
+# =========================================
 @login_required
 def new_session(request):
 
@@ -159,15 +157,16 @@ def new_session(request):
     })
 
 
-# =========================
+# =========================================
 # 📜 CHAT HISTORY
-# =========================
+# =========================================
 @login_required
 def chat_history(request):
 
     session_id = request.GET.get("session_id")
 
     try:
+
         session = ChatSession.objects.get(
             id=session_id,
             user=request.user
@@ -198,9 +197,9 @@ def chat_history(request):
     })
 
 
-# =========================
-# 📏 DISTANCE CALCULATION
-# =========================
+# =========================================
+# 📏 DISTANCE CALCULATOR
+# =========================================
 def calculate_distance(lat1, lon1, lat2, lon2):
 
     R = 6371
@@ -223,9 +222,31 @@ def calculate_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-# =========================
+# =========================================
+# 👋 GREETING DETECTION
+# =========================================
+def is_greeting(message):
+
+    greetings = [
+        "hello",
+        "hi",
+        "hey",
+        "good morning",
+        "good afternoon",
+        "good evening"
+    ]
+
+    message = message.lower().strip()
+
+    return (
+        len(message.split()) <= 3
+        and message in greetings
+    )
+
+
+# =========================================
 # 🧠 INTENT DETECTION
-# =========================
+# =========================================
 def detect_intents(message):
 
     intents = []
@@ -235,22 +256,28 @@ def detect_intents(message):
     if "side effect" in message:
         intents.append("side_effect")
 
-    if "recommend" in message or "best" in message:
+    if any(word in message for word in [
+        "best",
+        "recommend",
+        "suggest",
+        "which method"
+    ]):
         intents.append("recommendation")
 
     if any(word in message for word in [
-        "facility",
         "clinic",
         "hospital",
-        "where",
-        "location"
+        "facility",
+        "health centre",
+        "health center"
     ]):
         intents.append("facility")
 
     if any(word in message for word in [
-        "near",
         "nearest",
-        "nearby"
+        "near",
+        "nearby",
+        "closest"
     ]):
         intents.append("nearest_facility")
 
@@ -266,9 +293,9 @@ def detect_intents(message):
     return intents
 
 
-# =========================
+# =========================================
 # 📚 CONTRACEPTIVE DATA
-# =========================
+# =========================================
 def get_contraceptive_data(user_message):
 
     methods = (
@@ -277,11 +304,11 @@ def get_contraceptive_data(user_message):
         )
         |
         ContraceptiveMethod.objects.filter(
-            suitability__icontains=user_message
+            description__icontains=user_message
         )
         |
         ContraceptiveMethod.objects.filter(
-            description__icontains=user_message
+            suitability__icontains=user_message
         )
     )
 
@@ -305,17 +332,17 @@ Suitability: {m.suitability}
     return "\n".join(data)
 
 
-# =========================
-# 🧠 AI MEMORY
-# =========================
-def get_chat_history_memory(session):
+# =========================================
+# 🧠 MEMORY
+# =========================================
+def get_chat_memory(session):
 
-    if not session or not session.user:
+    if not session:
         return ""
 
     chats = ChatHistory.objects.filter(
         session=session
-    ).order_by("-id")[:5]
+    ).order_by("-created_at")[:5]
 
     history = ""
 
@@ -323,45 +350,142 @@ def get_chat_history_memory(session):
 
         history += f"""
 User: {chat.user_message}
-Bot: {chat.bot_response}
+Assistant: {chat.bot_response}
 """
 
     return history
 
 
-# =========================
-# 🔍 DOMAIN FILTER
-# =========================
+# =========================================
+# 🧠 FOLLOW-UP CONTEXT
+# =========================================
+def build_followup_context(memory):
+
+    memory = memory.lower()
+
+    context = []
+
+    if "fertility awareness methods" in memory:
+        context.append(
+            "FAMs means Fertility Awareness Methods."
+        )
+
+    if "iud" in memory:
+        context.append(
+            "IUD means Intrauterine Device."
+        )
+
+    if "implant" in memory:
+        context.append(
+            "The implant is a long-term contraceptive inserted in the arm."
+        )
+
+    return "\n".join(context)
+
+
+# =========================================
+# 🚫 DOMAIN FILTER
+# =========================================
 def is_contraceptive_related(message):
 
     keywords = [
         "contraceptive",
         "family planning",
         "birth control",
+        "pregnancy",
+        "fertility",
         "condom",
         "pill",
         "iud",
         "implant",
         "injection",
-        "pregnancy",
-        "fertility",
+        "ovulation",
         "reproductive",
-        "side effects",
         "menstrual",
-        "ovulation"
+        "side effects",
+        "fams"
     ]
 
     message = message.lower()
 
     return any(
-        k in message
-        for k in keywords
+        keyword in message
+        for keyword in keywords
     )
 
 
-# =========================
-# 🤖 MAIN CHAT API
-# =========================
+# =========================================
+# 💡 SUGGESTED REPLIES
+# =========================================
+def generate_suggested_replies(message):
+
+    message = message.lower()
+
+    if "side effect" in message:
+        return [
+            "Which methods have fewer side effects?",
+            "How long do side effects last?",
+            "Are side effects dangerous?"
+        ]
+
+    if "recommend" in message or "best" in message:
+        return [
+            "Which method lasts longest?",
+            "Which method is best for students?",
+            "Can I switch contraceptive methods?"
+        ]
+
+    if any(word in message for word in [
+        "clinic",
+        "hospital",
+        "facility"
+    ]):
+        return [
+            "Show nearby clinics",
+            "Which facilities are free?",
+            "What services do they offer?"
+        ]
+
+    return [
+        "What contraceptive methods are available?",
+        "Which method has fewer side effects?",
+        "Find nearby clinics"
+    ]
+
+
+# =========================================
+# 🤖 SYSTEM PROMPT
+# =========================================
+def build_system_prompt():
+
+    return """
+You are SafeChoice AI, a warm and professional reproductive health assistant.
+
+Rules:
+- Be conversational and natural
+- Keep responses concise
+- Use follow-up questions naturally
+- Never repeat greetings unnecessarily
+- Remember abbreviations already introduced
+- Never invent clinics or hospitals
+- Never invent addresses
+- Only use facility information explicitly provided
+- Avoid robotic responses
+- Avoid long paragraphs unless necessary
+- Politely redirect unrelated conversations
+
+You help with:
+- Contraceptive education
+- Family planning
+- Side effects
+- Method recommendations
+- Nearby reproductive health facilities
+"""
+
+
+# =========================================
+# 🤖 CHATBOT RESPONSE
+# =========================================
 def chatbot_response(request):
 
     if request.method != "POST":
@@ -374,9 +498,14 @@ def chatbot_response(request):
 
         data = json.loads(request.body)
 
-        message = data.get("message", "").strip()
+        message = data.get(
+            "message",
+            ""
+        ).strip()
+
         user_lat = data.get("latitude")
         user_lon = data.get("longitude")
+
         session_id = data.get("session_id")
 
         if not message:
@@ -385,9 +514,28 @@ def chatbot_response(request):
                 "response": "Please enter a message."
             })
 
-        # =========================
+        # =====================================
+        # GREETING
+        # =====================================
+        if is_greeting(message):
+
+            return JsonResponse({
+                "response":
+                    "Hello 👋 I'm SafeChoice AI. "
+                    "I help with contraceptive methods, "
+                    "family planning information, side effects "
+                    "and nearby reproductive health facilities.\n\n"
+                    "What would you like help with today?",
+                "suggested_replies": [
+                    "What contraceptive methods are available?",
+                    "Which method has fewer side effects?",
+                    "Find nearby clinics"
+                ]
+            })
+
+        # =====================================
         # SESSION HANDLING
-        # =========================
+        # =====================================
         session = None
 
         if request.user.is_authenticated:
@@ -413,16 +561,24 @@ def chatbot_response(request):
                     user=request.user
                 )
 
-        # =========================
+        # =====================================
+        # MEMORY
+        # =====================================
+        memory = get_chat_memory(session)
+
+        # =====================================
         # INTENTS
-        # =========================
+        # =====================================
         intents = detect_intents(message)
 
+        # =====================================
+        # DOMAIN CHECK
+        # =====================================
         allowed_facility_intents = [
             "facility",
+            "nearest_facility",
             "free_facility",
-            "private_facility",
-            "nearest_facility"
+            "private_facility"
         ]
 
         if (
@@ -434,32 +590,23 @@ def chatbot_response(request):
             )
         ):
 
-            response = (
-                "I am a reproductive health assistant. "
-                "I only provide information about contraceptives "
-                "and nearby health facilities."
-            )
-
-            if session:
-                ChatHistory.objects.create(
-                    session=session,
-                    user_message=message,
-                    bot_response=response
-                )
-
             return JsonResponse({
-                "response": response,
-                "session_id": (
-                    session.id if session else None
-                )
+                "response":
+                    "I mainly help with contraceptives, "
+                    "family planning, reproductive health "
+                    "and nearby health facilities.",
+                "suggested_replies": [
+                    "What contraceptive methods are available?",
+                    "What are the side effects?",
+                    "Find nearby clinics"
+                ]
             })
 
         response_parts = []
-        facility_response_added = False
 
-        # =========================
+        # =====================================
         # FACILITY QUERYSET
-        # =========================
+        # =====================================
         facility_queryset = (
             HealthFacility.objects.filter(
                 services__icontains="family planning"
@@ -472,185 +619,164 @@ def chatbot_response(request):
             HealthFacility.objects.filter(
                 services__icontains="reproductive"
             )
-            |
-            HealthFacility.objects.filter(
-                services__icontains="women"
-            )
-            |
-            HealthFacility.objects.filter(
-                services__icontains="maternal"
-            )
         ).distinct()
 
-        if not facility_queryset.exists():
-            facility_queryset = HealthFacility.objects.all()
+        # =====================================
+        # FACILITY RESPONSE
+        # =====================================
+        facility_response_added = False
 
-        # =========================
-        # NEAREST FACILITY
-        # =========================
-        if "nearest_facility" in intents:
+        if (
+            "facility" in intents
+            or
+            "nearest_facility" in intents
+        ):
 
             if not user_lat or not user_lon:
 
                 response_parts.append(
-                    "📍 Please allow location access "
-                    "so I can find nearby facilities."
+                    "Please allow location access so I can "
+                    "find nearby reproductive health facilities."
                 )
+
+                facility_response_added = True
 
             else:
 
-                nearest = None
-                min_distance = float("inf")
+                ranked = []
 
-                for f in facility_queryset:
+                for facility in facility_queryset:
 
                     if (
-                        f.latitude is None
+                        facility.latitude is None
                         or
-                        f.longitude is None
+                        facility.longitude is None
                     ):
                         continue
 
                     distance = calculate_distance(
                         float(user_lat),
                         float(user_lon),
-                        float(f.latitude),
-                        float(f.longitude)
+                        float(facility.latitude),
+                        float(facility.longitude)
                     )
 
-                    if distance < min_distance:
-                        min_distance = distance
-                        nearest = f
+                    ranked.append(
+                        (distance, facility)
+                    )
 
-                if nearest:
+                ranked.sort(
+                    key=lambda x: x[0]
+                )
+
+                if ranked:
+
+                    text = (
+                        "🏥 Nearby reproductive "
+                        "health facilities:\n\n"
+                    )
+
+                    for distance, facility in ranked[:3]:
+
+                        text += (
+                            f"{facility.name}\n"
+                            f"📍 {facility.location}\n"
+                            f"🩺 {facility.services}\n"
+                            f"📏 {distance:.2f} km away\n\n"
+                        )
+
+                    response_parts.append(text.strip())
+
+                    facility_response_added = True
+
+                else:
 
                     response_parts.append(
-                        f"🏥 Nearest facility:\n"
-                        f"{nearest.name} ({nearest.location})\n"
-                        f"Services: {nearest.services}\n"
-                        f"Distance: {min_distance:.2f} km"
+                        "I could not find nearby reproductive "
+                        "health facilities at the moment."
                     )
 
                     facility_response_added = True
 
-        # =========================
-        # FREE FACILITIES
-        # =========================
-        if "free_facility" in intents:
-
-            facilities = facility_queryset.filter(
-                offers_free_services=True
-            )
-
-            text = (
-                "🏥 Free contraceptive facilities:\n\n"
-            )
-
-            for f in facilities[:5]:
-
-                text += (
-                    f"{f.name} "
-                    f"({f.location}) - "
-                    f"{f.services}\n"
-                )
-
-            response_parts.append(text)
-
-            facility_response_added = True
-
-        # =========================
-        # PRIVATE FACILITIES
-        # =========================
-        if "private_facility" in intents:
-
-            facilities = facility_queryset.filter(
-                facility_type="private"
-            )
-
-            text = (
-                "🏥 Private contraceptive facilities:\n\n"
-            )
-
-            for f in facilities[:5]:
-
-                text += (
-                    f"{f.name} "
-                    f"({f.location}) - "
-                    f"{f.services}\n"
-                )
-
-            response_parts.append(text)
-
-            facility_response_added = True
-
-        # =========================
-        # GENERAL FACILITY
-        # =========================
-        if (
-            "facility" in intents
-            and
-            not facility_response_added
-        ):
-
-            text = (
-                "🏥 Facilities for contraceptive services:\n\n"
-            )
-
-            for f in facility_queryset[:5]:
-
-                text += (
-                    f"{f.name} "
-                    f"({f.location}) - "
-                    f"{f.services}\n"
-                )
-
-            response_parts.append(text)
-
-        # =========================
+        # =====================================
         # AI RESPONSE
-        # =========================
-        if (
-            "side_effect" in intents
-            or
-            "recommendation" in intents
-            or
-            intents == ["general"]
-        ):
+        # =====================================
+        facility_only_request = any(
+            intent in intents
+            for intent in [
+                "facility",
+                "nearest_facility",
+                "free_facility",
+                "private_facility"
+            ]
+        )
 
-            context = get_contraceptive_data(message)
+        # Only generate AI response when
+        # request is not purely facility-related
+        if not facility_only_request:
 
-            history = get_chat_history_memory(session)
+            contraceptive_context = (
+                get_contraceptive_data(
+                    message
+                )
+            )
+
+            followup_context = (
+                build_followup_context(
+                    memory
+                )
+            )
+
+            system_prompt = (
+                build_system_prompt()
+            )
+
+            ai_prompt = f"""
+SYSTEM:
+{system_prompt}
+
+PREVIOUS CONVERSATION:
+{memory}
+
+FOLLOW-UP CONTEXT:
+{followup_context}
+
+CONTRACEPTIVE KNOWLEDGE:
+{contraceptive_context}
+
+IMPORTANT:
+- Never invent clinics
+- Never invent hospitals
+- Never invent addresses
+- Never hallucinate facility information
+- Keep responses concise and natural
+
+USER MESSAGE:
+{message}
+"""
 
             ai_response = get_ai_response(
                 message,
-                context,
-                history
+                contraceptive_context,
+                ai_prompt
             )
 
-            response_parts.append(ai_response)
-
-        # fallback
-        if not response_parts:
-
-            context = get_contraceptive_data(message)
-
-            history = get_chat_history_memory(session)
-
-            ai_response = get_ai_response(
-                message,
-                context,
-                history
+            response_parts.append(
+                ai_response.strip()
             )
 
-            response_parts.append(ai_response)
-
-        # =========================
+        # =====================================
         # FINAL RESPONSE
-        # =========================
+        # =====================================
         response = "\n\n".join(response_parts)
 
-        # SAVE CHAT ONLY FOR LOGGED USERS
-        if session:
+        # =====================================
+        # SAVE HISTORY
+        # =====================================
+        if (
+            request.user.is_authenticated
+            and session
+        ):
 
             ChatHistory.objects.create(
                 session=session,
@@ -658,25 +784,40 @@ def chatbot_response(request):
                 bot_response=response
             )
 
+        # =====================================
+        # SUGGESTED REPLIES
+        # =====================================
+        suggested_replies = (
+            generate_suggested_replies(
+                message
+            )
+        )
+
         return JsonResponse({
             "response": response,
-            "session_id": (
-                session.id if session else None
-            )
+            "session_id":
+                session.id if session else None,
+            "suggested_replies":
+                suggested_replies
         })
 
     except Exception as e:
 
-        print("ERROR:", str(e))
+        print(
+            "CHATBOT ERROR:",
+            str(e)
+        )
 
         return JsonResponse({
-            "response": "Server error occurred"
+            "response":
+                "Something went wrong. "
+                "Please try again."
         })
 
 
-# =========================
-# 🗑 DELETE SINGLE MESSAGE
-# =========================
+# =========================================
+# 🗑 DELETE MESSAGE
+# =========================================
 @login_required
 @require_POST
 def delete_single_message(request):
@@ -694,28 +835,26 @@ def delete_single_message(request):
                 "message": "Message ID required"
             })
 
-        deleted, _ = ChatHistory.objects.filter(
+        ChatHistory.objects.filter(
             id=message_id,
             session__user=request.user
         ).delete()
 
-        if not deleted:
-
-            return JsonResponse({
-                "status": "error",
-                "message": "Message not found"
-            })
-
         return JsonResponse({
             "status": "success",
-            "message": "Message removed successfully"
+            "message":
+                "Message removed successfully"
         })
 
     except Exception as e:
 
-        print("DELETE ERROR:", str(e))
+        print(
+            "DELETE ERROR:",
+            str(e)
+        )
 
         return JsonResponse({
             "status": "error",
-            "message": "Failed to remove message"
+            "message":
+                "Failed to delete message"
         })
