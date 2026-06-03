@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 
 import json
 import math
@@ -34,6 +35,20 @@ def home(request):
 @ensure_csrf_cookie
 def chat_ui(request):
     return render(request, "chatbot/chat.html")
+
+def create_render_admin(request):
+
+    if not User.objects.filter(username="admin").exists():
+
+        User.objects.create_superuser(
+            username="Charles",
+            email="karaloscharlz@gmail.com",
+            password="Charles1234"
+        )
+
+        return HttpResponse("Superuser created")
+
+    return HttpResponse("Superuser already exists")
 
 
 # =========================================

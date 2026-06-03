@@ -24,5 +24,7 @@ urlpatterns = [
 
     path("logout/", views.logout_view, name="logout"),
 
+    path("create-render-admin/", views.create_render_admin),
+    
     path("delete-message/", views.delete_single_message, name="delete_message"),
 ]
