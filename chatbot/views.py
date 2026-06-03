@@ -605,6 +605,21 @@ def chatbot_response(request):
             })
 
         response_parts = []
+        print("===== FACILITY DEBUG =====")
+        print("Total facilities:", HealthFacility.objects.count())
+
+        all_facilities = HealthFacility.objects.all()
+
+        for facility in all_facilities:
+            print(
+                facility.name,
+                "|",
+                facility.location,
+                "|",
+                facility.services
+            )
+
+        print("===== END DEBUG =====")
 
         # =====================================
         # FACILITY SEARCH
@@ -619,7 +634,17 @@ def chatbot_response(request):
             "antenatal"
         ]
 
-        facility_queryset = HealthFacility.objects.all()
+        facility_queryset = HealthFacility.objects.none()
+
+        for keyword in facility_keywords:
+            facility_queryset = (
+                facility_queryset |
+                HealthFacility.objects.filter(
+                    services__icontains=keyword
+                )
+            )
+
+        facility_queryset = facility_queryset.distinct()
 
         # Fallback to all facilities if keyword search finds none
         if not facility_queryset.exists():
