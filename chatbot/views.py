@@ -41,9 +41,9 @@ def create_render_admin(request):
     if not User.objects.filter(username="admin").exists():
 
         User.objects.create_superuser(
-            username="Charles",
+            username="admin",
             email="karaloscharlz@gmail.com",
-            password="Charles1234"
+            password="Admin123456"
         )
 
         return HttpResponse("Superuser created")
