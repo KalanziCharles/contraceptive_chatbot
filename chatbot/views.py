@@ -579,6 +579,8 @@ def chatbot_response(request):
             "nearest_facility",
             "free_facility",
             "private_facility"
+             "nearby clinic"
+             "health_facility"
         ]
 
         if (
@@ -629,77 +631,92 @@ def chatbot_response(request):
 
         facility_queryset = facility_queryset.distinct()
 
-        # fallback
+        # Fallback to all facilities if keyword search finds none
         if not facility_queryset.exists():
-            facility_queryset = HealthFacility.objects.all()[:5]
-
-        # =====================================
-        # FACILITY RESPONSES
-        # =====================================
+            facility_queryset = HealthFacility.objects.all()
 
         facility_response_given = False
 
-        if any(i in intents for i in [
+        # =====================================
+        # FACILITY REQUESTS
+        # =====================================
+
+        if any(intent in intents for intent in [
             "facility",
             "nearest_facility",
             "free_facility",
             "private_facility"
         ]):
 
-            facilities_to_show = []
+            queryset = facility_queryset
 
-            # ---------------------------------
-            # FILTERS
-            # ---------------------------------
-
+            # ------------------------------
+            # FREE FACILITIES
+            # ------------------------------
             if "free_facility" in intents:
-                facility_queryset = facility_queryset.filter(
+                queryset = queryset.filter(
                     offers_free_services=True
                 )
 
+            # ------------------------------
+            # PRIVATE FACILITIES
+            # ------------------------------
             if "private_facility" in intents:
-                facility_queryset = facility_queryset.filter(
+                queryset = queryset.filter(
                     facility_type__iexact="private"
                 )
 
-            # ---------------------------------
-            # USE GEOLOCATION IF AVAILABLE
-            # ---------------------------------
-
-            if user_lat and user_lon:
+            # ------------------------------
+            # NEARBY FACILITIES
+            # ------------------------------
+            if (
+                "nearest_facility" in intents and
+                user_lat and
+                user_lon
+            ):
 
                 nearby = []
 
-                for facility in facility_queryset:
+                for facility in queryset:
 
-                    if (
-                        facility.latitude is not None and
-                        facility.longitude is not None
-                    ):
+                    try:
 
-                        try:
-
-                            distance = calculate_distance(
-                                float(user_lat),
-                                float(user_lon),
-                                float(facility.latitude),
-                                float(facility.longitude)
-                            )
-
-                            nearby.append((distance, facility))
-
-                        except:
+                        if (
+                            facility.latitude is None or
+                            facility.longitude is None
+                        ):
                             continue
 
-                nearby.sort(key=lambda x: x[0])
+                        distance = calculate_distance(
+                            float(user_lat),
+                            float(user_lon),
+                            float(facility.latitude),
+                            float(facility.longitude)
+                        )
 
-                facilities_to_show = nearby[:3]
+                        nearby.append(
+                            (distance, facility)
+                        )
 
-                if facilities_to_show:
+                    except Exception as e:
+                        print(
+                            f"Distance error for "
+                            f"{facility.name}: {e}"
+                        )
+                        continue
 
-                    response = "🏥 Nearby reproductive health facilities:\n\n"
+                nearby.sort(
+                    key=lambda x: x[0]
+                )
 
-                    for distance, facility in facilities_to_show:
+                if nearby:
+
+                    response = (
+                        "🏥 Nearby reproductive "
+                        "health facilities:\n\n"
+                    )
+
+                    for distance, facility in nearby[:5]:
 
                         response += (
                             f"{facility.name}\n"
@@ -712,18 +729,21 @@ def chatbot_response(request):
 
                     facility_response_given = True
 
-            # ---------------------------------
-            # FALLBACK WITHOUT GEOLOCATION
-            # ---------------------------------
-
+            # ------------------------------
+            # FALLBACK
+            # NO LOCATION OR NO DISTANCES
+            # ------------------------------
             if not facility_response_given:
 
-                facilities = facility_queryset[:5]
+                facilities = list(
+                    queryset[:5]
+                )
 
-                if facilities.exists():
+                if facilities:
 
                     response = (
-                        "🏥 Available reproductive health facilities:\n\n"
+                        "🏥 Available reproductive "
+                        "health facilities:\n\n"
                     )
 
                     for facility in facilities:
@@ -734,14 +754,17 @@ def chatbot_response(request):
                             f"🩺 {facility.services}\n\n"
                         )
 
-                    response_parts.append(response)
+                    response_parts.append(
+                        response
+                    )
 
                     facility_response_given = True
 
                 else:
 
                     response_parts.append(
-                        "I could not find reproductive health facilities at the moment."
+                        "I could not find reproductive "
+                        "health facilities at the moment."
                     )
 
                     facility_response_given = True
@@ -761,18 +784,18 @@ def chatbot_response(request):
 
         # Only generate AI response when
         # request is not purely facility-related
-        if not facility_only_request:
+        if (
+            not facility_only_request
+            and
+            not facility_response_given
+        ):
 
             contraceptive_context = (
-                get_contraceptive_data(
-                    message
-                )
+                get_contraceptive_data(message)
             )
 
             followup_context = (
-                build_followup_context(
-                    memory
-                )
+                build_followup_context(memory)
             )
 
             system_prompt = (
@@ -780,30 +803,27 @@ def chatbot_response(request):
             )
 
             ai_prompt = f"""
-SYSTEM:
-{system_prompt}
+        SYSTEM:
+        {system_prompt}
 
-PREVIOUS CONVERSATION:
-{memory}
+        PREVIOUS CONVERSATION:
+        {memory}
 
-FOLLOW-UP CONTEXT:
-{followup_context}
+        FOLLOW-UP CONTEXT:
+        {followup_context}
 
-CONTRACEPTIVE KNOWLEDGE:
-{contraceptive_context}
+        CONTRACEPTIVE KNOWLEDGE:
+        {contraceptive_context}
 
-IMPORTANT:
-- Never invent clinics
-- Never invent hospitals
-- Never invent addresses
-- Never hallucinate facility information
-- Keep responses concise and natural
+        IMPORTANT:
+        - Never invent clinics
+        - Never invent hospitals
+        - Never invent addresses
+        - Only use facility data supplied by the system
 
-USER MESSAGE:
-{message}
-"""
-
-        if not facility_response_given:
+        USER MESSAGE:
+        {message}
+        """
 
             ai_response = get_ai_response(
                 message,
