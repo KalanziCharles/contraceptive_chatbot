@@ -130,15 +130,16 @@ body {
 }
 
 .history-section {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;      /* Take only as much space as needed */
+    max-height: 60%;     /* Prevent overflow if too many items */
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .chat-list {
     overflow-y: auto;
-    min-height: 0;
+    max-height: 100%;
 }
 
 .chat-item {
@@ -600,18 +601,18 @@ body {
     </div>
 
     {% if user.is_authenticated %}
-    <!-- LOGGED IN: Show History -->
-    <div class="history-section">
-        <div class="sidebar-section-title">History</div>
-        <div class="chat-list" id="chatList"></div>
-    </div>
+        <!-- LOGGED IN: Show History (hidden initially, shown by JS if sessions exist) -->
+        <div class="history-section" id="historySection" style="display: none;">
+            <div class="sidebar-section-title">History</div>
+            <div class="chat-list" id="chatList"></div>
+        </div>
     {% else %}
-    <!-- ANONYMOUS: Show prompt to login/signup -->
-    <div class="anon-sidebar-prompt">
-        🔒 <a href="{% url 'login' %}">Login</a> or
-        <a href="{% url 'signup' %}">Create account</a><br>
-        to save your conversations.
-    </div>
+        <!-- ANONYMOUS: Show prompt to login/signup (no history) -->
+        <div class="anon-sidebar-prompt">
+            <a href="{% url 'login' %}">Login</a> or
+            <a href="{% url 'signup' %}">Create account</a><br>
+            to save your conversations.
+        </div>
     {% endif %}
 
     <!-- FAQ Section (shown to everyone) -->
@@ -689,9 +690,7 @@ body {
                         </a>
                         {% endif %}
 
-                        <button onclick="toggleTheme(); closeDropdown();">
-                            🌙 Dark / Light
-                        </button>
+                        <button onclick="toggleTheme(); closeDropdown();">🌙 Dark / Light</button>
 
                     </div>
                 </div>
@@ -930,38 +929,34 @@ function newChat() {
 }
 
 function loadSessions() {
-
     fetch("/sessions/")
         .then(res => res.json())
         .then(data => {
-
-            const list =
-                document.getElementById("chatList");
-
+            const list = document.getElementById("chatList");
+            const historySection = document.getElementById("historySection");
             if (!list) return;
 
             list.innerHTML = "";
 
-            data.sessions.forEach(session => {
-
-                const div = document.createElement("div");
-
-                div.className = "chat-item";
-
-                div.dataset.sessionId = session.id;
-
-                div.innerText =
-                    truncateTitle(session.title);
-
-                div.onclick = () => {
-
-                    loadChat(session.id);
-
-                    closeSidebar();
-                };
-
-                list.appendChild(div);
-            });
+            if (data.sessions && data.sessions.length > 0) {
+                // Show history section
+                if (historySection) historySection.style.display = "block";
+                
+                data.sessions.forEach(session => {
+                    const div = document.createElement("div");
+                    div.className = "chat-item";
+                    div.dataset.sessionId = session.id;
+                    div.innerText = truncateTitle(session.title);
+                    div.onclick = () => {
+                        loadChat(session.id);
+                        closeSidebar();
+                    };
+                    list.appendChild(div);
+                });
+            } else {
+                // No sessions – hide the history section entirely
+                if (historySection) historySection.style.display = "none";
+            }
 
             if (session_id !== null) {
                 setActiveSession(session_id);

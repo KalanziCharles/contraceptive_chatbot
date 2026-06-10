@@ -7,6 +7,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.db.models import Count
 
 import json
 import math
@@ -97,7 +98,13 @@ def logout_view(request):
 # =========================================
 @login_required
 def get_sessions(request):
-    sessions = ChatSession.objects.filter(user=request.user).order_by("-updated_at", "-id")
+    sessions = ChatSession.objects.filter(
+    user=request.user
+        ).annotate(
+            msg_count=Count('chathistory')
+        ).filter(
+            msg_count__gt=0
+        ).order_by("-created_at", "-id")
     data = []
     for session in sessions:
         first_chat = ChatHistory.objects.filter(session=session).order_by("id").first()
