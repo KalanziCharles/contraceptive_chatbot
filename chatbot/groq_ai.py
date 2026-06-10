@@ -35,4 +35,7 @@ Provide a clear, accurate, and helpful answer.
         temperature=0.3
     )
 
-     return completion.choices[0].message.content
+     # Normalize formatting: remove markdown emphasis characters like **...**
+     result = completion.choices[0].message.content or ""
+     result = result.replace("**", "")
+     return result

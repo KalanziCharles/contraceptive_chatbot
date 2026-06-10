@@ -45,7 +45,16 @@ class ChatSession(models.Model):
         blank=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True) 
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # --- Recommendation profile (Step 2) ---
+    # Stored as simple text fields; parsed from chat messages.
+    profile_age_band = models.CharField(max_length=20, null=True, blank=True)
+    profile_goal = models.CharField(max_length=30, null=True, blank=True)  # short_term | long_term
+    profile_hormone_preference = models.CharField(max_length=30, null=True, blank=True)  # hormone_free | any
+    profile_relationship_status = models.CharField(max_length=30, null=True, blank=True)  # monogamous | not_monogamous | unknown
+
+
 
     def __str__(self):
         if self.user:

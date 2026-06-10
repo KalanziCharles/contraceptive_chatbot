@@ -319,38 +319,185 @@ def is_followup_question(message):
 # =========================================
 # 💡 RECOMMENDATION HANDLER (IMPROVED)
 # =========================================
-def handle_recommendation(message, session):
-    # If the user shared a relationship preference, acknowledge it and ask further
-    if "relationship_preference" in detect_intents(message):
+def parse_profile_from_message(message, session):
+    """Parse user message into recommendation profile fields and persist to ChatSession."""
+    if not session:
+        return
+
+    text = (message or "").lower()
+    fear_text = (message or "").lower()
+    if any(k in fear_text for k in [
+        "scared", "afraid", "worried", "nervous", "panic", "fear",
+        "infertile", "infertility", "become infertile", "can't get pregnant",
+        "can't conceive", "not able to get pregnant", "fertility", "reversible",
+    ]):
         return (
-            "Thanks for sharing that you're in a monogamous relationship. "
-            "Since STI protection may be less of a concern, we can focus on pregnancy prevention.\n\n"
-            "To help me recommend a method, could you tell me:\n"
-            "• How old are you?\n"
-            "• Do you prefer a daily pill, a long-acting option (like an implant or IUD), or something else?\n"
-            "• Would you like a hormone-free method?\n\n"
-            "Feel free to answer any of these."
+            "I hear you — that fear makes total sense. When something affects fertility, it’s natural to feel worried.\n\n"
+            "The good news is that most long‑acting reversible contraceptives (LARCs) like the **IUD** and the **implant** "
+            "are designed to be reversible. When they’re removed, fertility typically returns.\n\n"
+            "So I can guide you more comfortably: "
+            "are you mainly worried about fertility returning after removal, or about how your body might feel day‑to‑day?\n\n"
+            "Also, this is general info — a clinician can help you choose the option that feels safest for you."
         )
 
-    current_topic = get_current_topic(session)
-    if current_topic:
-        return (
-            "Before recommending a method, can I ask:\n\n"
-            "• How old are you?\n"
-            "• Are you looking for short-term or long-term protection?\n"
-            "• Would you prefer a hormone-free option?\n\n"
-            "This helps me recommend a suitable method."
+
+    # Age band extraction (very lightweight)
+    # Examples: "I'm 18", "age 22", "25 years old"
+    import re
+    age_match = re.search(r"\b(\d{1,2})\b", text)
+    if age_match:
+        age = int(age_match.group(1))
+        # bands: <20, 20-30, 31+
+        if age < 20:
+            session.profile_age_band = "under_20"
+        elif age <= 30:
+            session.profile_age_band = "20_30"
+        else:
+            session.profile_age_band = "31_plus"
+
+    # Goal extraction
+    if any(w in text for w in ["long-term", "long term", "longer", "i want it to last", "years", "lasting"]):
+        session.profile_goal = "long_term"
+    if any(w in text for w in ["short-term", "short term", "quick", "temporary", "for now", "months"]):
+        session.profile_goal = "short_term"
+
+    # Hormone preference
+    if any(w in text for w in ["hormone-free", "no hormones", "non hormonal", "hormone free", "natural"]):
+        session.profile_hormone_preference = "hormone_free"
+    if any(w in text for w in ["doesn't matter", "any", "i'm okay", "accept hormones", "hormonal ok", "hormonal"]):
+        session.profile_hormone_preference = "any"
+
+    # Relationship / STI concern
+    if any(w in text for w in ["monogamous", "monogamy", "steady partner", "only one partner", "single partner"]):
+        session.profile_relationship_status = "monogamous"
+    if any(w in text for w in ["not monogamous", "multiple partners", "new partner", "sti", "std"]):
+        session.profile_relationship_status = "not_monogamous"
+
+    session.save()
+
+
+def rank_methods(profile, candidate_methods):
+    """Deterministic ranking using method fields as weak signals."""
+    goal = profile.get("goal")
+    hormone_pref = profile.get("hormone_preference")
+    side_effect_focus = profile.get("side_effect_focus")
+
+    def keyword_score(method_text, keywords):
+        if not method_text:
+            return 0
+        score = 0
+        lt = method_text.lower()
+        for k in keywords:
+            if k in lt:
+                score += 1
+        return score
+
+    scored = []
+    for m in candidate_methods:
+        text_blob = " ".join([
+            getattr(m, "name", ""),
+            getattr(m, "description", ""),
+            getattr(m, "effectiveness", ""),
+            getattr(m, "advantages", ""),
+            getattr(m, "disadvantages", ""),
+            getattr(m, "side_effects", ""),
+            getattr(m, "suitability", ""),
+        ])
+
+        score = 0
+
+        # Goal match (long-acting vs short-term)
+        if goal == "long_term":
+            score += keyword_score(text_blob, ["long-acting", "long acting", "implant", "iud", "injection", "years"])
+        elif goal == "short_term":
+            score += keyword_score(text_blob, ["pill", "daily", "condom", "month", "monthly"])
+
+        # Hormone preference
+        if hormone_pref == "hormone_free":
+            score += keyword_score(text_blob, ["copper", "nonhormonal", "non-hormonal", "no hormones", "hormone-free", "hormone free"])
+            # down-rank known hormonal methods
+            score -= keyword_score(text_blob, ["hormone", "estrogen", "progestin", "levonorgestrel"])
+
+        # Side-effect focus (very rough)
+        if side_effect_focus == "fewer":
+            score += keyword_score(text_blob, ["less", "minimal", "lower", "fewer side effects"])
+            score -= keyword_score(text_blob, ["common side effects", "may cause", "nausea", "weight gain", "spotting", "bleeding"])
+
+        scored.append((score, m))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [m for _, m in scored]
+
+
+def handle_recommendation(message, session):
+    # 1) Parse any answers into the stored ChatSession profile fields
+    parse_profile_from_message(message, session)
+
+    profile = {
+        "age_band": getattr(session, "profile_age_band", None),
+        "goal": getattr(session, "profile_goal", None),
+        "hormone_preference": getattr(session, "profile_hormone_preference", None),
+    }
+
+    # 2) Ask only missing info
+    missing = []
+    if not profile.get("age_band"):
+        missing.append("age")
+    if not profile.get("goal"):
+        missing.append("goal")
+    if not profile.get("hormone_preference"):
+        missing.append("hormone preference")
+
+    if missing:
+        qs = []
+        for m in missing:
+            if m == "age":
+                qs.append("• How old are you? (approx is fine)")
+            if m == "goal":
+                qs.append("• Do you want short-term or long-term protection?")
+            if m == "hormone preference":
+                qs.append("• Do you prefer a hormone-free method?")
+        return "To recommend a method that fits you, I just need a bit more info:\n\n" + "\n".join(qs) + "\n"
+
+    # 3) Rank candidates and return top 3 with concise justification
+    candidates = list(ContraceptiveMethod.objects.all())
+
+    rank_profile = {
+        "goal": profile.get("goal"),
+        "hormone_preference": profile.get("hormone_preference"),
+        "side_effect_focus": None,
+    }
+
+    ranked = rank_methods(rank_profile, candidates)[:3]
+
+    def justify(method):
+        text_blob = (method.description + " " + method.suitability + " " + method.effectiveness).lower()
+        bits = []
+
+        if profile.get("goal") == "long_term":
+            if any(k in text_blob for k in ["long-acting", "long acting", "implant", "iud", "injection", "years"]):
+                bits.append("Good fit for long-term protection.")
+        if profile.get("goal") == "short_term":
+            if any(k in text_blob for k in ["daily", "pill", "condom", "month", "monthly"]):
+                bits.append("Matches short-term/daily needs.")
+
+        if profile.get("hormone_preference") == "hormone_free":
+            if any(k in text_blob for k in ["copper", "non-hormonal", "nonhormonal", "hormone-free", "hormone free"]):
+                bits.append("Aligns with a hormone-free preference.")
+
+        return " ".join(bits) if bits else "Matches your preferences."
+
+    lines = ["Here are the top matches for your preferences (education only):"]
+    for i, m in enumerate(ranked, start=1):
+        lines.append(
+            f"{i}) {m.name}\n"
+            f"   Effectiveness: {m.effectiveness}\n"
+            f"   Suitability: {m.suitability}\n"
+            f"   {justify(m)}"
         )
-    else:
-        # No previous topic – ask general clarifying questions
-        return (
-            "I'd love to help you find the best contraceptive method.\n\n"
-            "Could you tell me a little more about your situation?\n"
-            "• Are you in a monogamous relationship?\n"
-            "• Do you want to avoid pregnancy, or are you planning for the future?\n"
-            "• Would you prefer a daily pill, a long-acting method like an implant, or something else?\n\n"
-            "Any detail helps!"
-        )
+
+    return "\n\n".join(lines)
+
 
 
 # =========================================
@@ -430,6 +577,99 @@ You help with:
 # =========================================
 # 🤖 CHATBOT RESPONSE (MAIN)
 # =========================================
+MEDICAL_INFORMATION_DISCLAIMER = (
+    "*Note: This information is for education only and does not replace professional medical advice. "
+    "If you have severe or worsening symptoms, please seek care immediately.*"
+)
+
+
+def detect_emergency_symptoms(message):
+    text = (message or "").lower()
+
+    # Categories with keyword/phrase lists (kept conservative)
+    categories = {
+        "severe_bleeding": [
+            "heavy bleeding", "bleeding heavily", "soaking", "soak", "soaked", "clots",
+            "bleeding through", "bleed through", "very heavy period", "hemorrhage",
+        ],
+        "fainting_or_dizzy": [
+            "faint", "fainted", "fainting", "dizzy", "lightheaded", "collapse",
+        ],
+        "severe_pain": [
+            "severe pain", "bad pain", "worst pain", "intense pain", "severe cramps",
+        ],
+        "chest_pain_or_breathing": [
+            "chest pain", "shortness of breath", "difficulty breathing", "breathing trouble",
+            "trouble breathing",
+        ],
+        "severe_headache": [
+            "severe headache", "worst headache", "sudden headache", "headache with vision",
+        ],
+        "infection_signs": [
+            "fever", "high temperature", "chills", "foul smell", "bad odor",
+            "bad discharge", "infected", "infection", "worsening pain", "pelvic pain",
+        ],
+    }
+
+    for category, keywords in categories.items():
+        if any(k in text for k in keywords):
+            return category
+
+    return None
+
+
+def build_emergency_response(category, user_lat, user_lon):
+    base = (
+        "🚨 Possible emergency symptoms detected. "
+        "If you are in danger or symptoms are severe/worsening, seek urgent in-person medical care immediately.\n\n"
+        f"{MEDICAL_INFORMATION_DISCLAIMER}\n\n"
+    )
+
+    # Optional help: nearest facilities if coordinates were provided
+    facility_block = ""
+    if user_lat is not None and user_lon is not None:
+        try:
+            facility_queryset = HealthFacility.objects.all()
+            nearby = []
+            for facility in facility_queryset:
+                if facility.latitude is None or facility.longitude is None:
+                    continue
+                distance = calculate_distance(
+                    float(user_lat), float(user_lon), float(facility.latitude), float(facility.longitude)
+                )
+                nearby.append((distance, facility))
+            nearby.sort(key=lambda x: x[0])
+            nearby = nearby[:3]
+            if nearby:
+                facility_block = "🏥 Nearest health facilities you can contact:\n\n"
+                for dist, f in nearby:
+                    facility_block += f"{f.name} — {f.location} ({dist:.1f} km away)\n"
+                facility_block += "\n"
+        except Exception:
+            facility_block = ""
+
+    category_hint = {
+        "severe_bleeding": "Heavy bleeding can be serious. Please seek emergency care now.",
+        "fainting_or_dizzy": "Fainting or severe dizziness can be serious. Please seek urgent care now.",
+        "severe_pain": "Severe pain after contraception can be a warning sign. Please seek urgent care now.",
+        "chest_pain_or_breathing": "Chest pain or breathing difficulty can be an emergency. Please seek urgent/emergency care now.",
+        "severe_headache": "Severe headache (especially sudden or with vision changes) can be an emergency. Please seek urgent care now.",
+        "infection_signs": "Signs of infection (e.g., fever, foul discharge, worsening pelvic pain) need prompt care. Please seek urgent care now.",
+    }.get(category, "Please seek urgent in-person medical care now.")
+
+    return base + category_hint + "\n\n" + facility_block
+
+
+def maybe_enrich_message_with_abbreviations(message, session):
+    # Make abbreviation grounding robust even when prompt memory doesn’t contain the alias.
+    if not message:
+        return message
+    lower = message.lower()
+    if "fams" in lower and session:
+        return f"FAMs stands for Fertility Awareness Methods. {message}"
+    return message
+
+
 def chatbot_response(request):
     if request.method != "POST":
         return JsonResponse({"response": "Invalid request"}, status=400)
@@ -467,7 +707,32 @@ def chatbot_response(request):
                 session = ChatSession.objects.create(user=request.user)
 
         memory = get_chat_memory(session)
+        # Emergency-first safeguard
+        emergency_category = detect_emergency_symptoms(message)
+        if emergency_category:
+            emergency_response = build_emergency_response(emergency_category, user_lat, user_lon)
+            if request.user.is_authenticated and session:
+                ChatHistory.objects.create(
+                    session=session,
+                    user_message=message,
+                    bot_response=emergency_response
+                )
+            return JsonResponse({
+                "response": emergency_response,
+                "session_id": session.id if session else None,
+                "suggested_replies": [
+                    "Find nearby clinics",
+                    "I need urgent help",
+                    "What should I do next?"
+                ]
+            })
+
+        # Improve abbreviation grounding before intent detection / prompt building
+        message = maybe_enrich_message_with_abbreviations(message, session)
+
         intents = detect_intents(message)
+
+
 
         # ----- ENRICH VAGUE FOLLOW-UPS WITH CURRENT TOPIC -----
         current_topic = get_current_topic(session)
@@ -503,8 +768,14 @@ def chatbot_response(request):
                 ]
             })
 
-        # ----- RECOMMENDATION HANDLER (asks clarifying questions) -----
-        if "recommendation" in intents or "relationship_preference" in intents:
+# ----- RECOMMENDATION HANDLER (asks clarifying questions) -----
+        if "recommendation" in intents or "relationship_preference" in intents or (
+            session and (
+                not session.profile_age_band or
+                not session.profile_goal or
+                not session.profile_hormone_preference
+            )
+        ):
             recommendation_response = handle_recommendation(message, session)
             if recommendation_response:
                 return JsonResponse({
@@ -515,7 +786,6 @@ def chatbot_response(request):
                         "I'm a university student"
                     ]
                 })
-
         response_parts = []
 
         # ----- FACILITY SEARCH (unchanged, but removed debug prints for clarity) -----
