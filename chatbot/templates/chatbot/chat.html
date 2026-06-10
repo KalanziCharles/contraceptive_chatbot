@@ -183,6 +183,22 @@ body {
     display: none;
 }
 
+/* Anonymous sidebar prompt */
+.anon-sidebar-prompt {
+    margin-top: 20px;
+    padding: 12px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.anon-sidebar-prompt a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+}
+
 /* =========================
    MAIN
 ========================= */
@@ -334,14 +350,6 @@ body {
     padding: 24px;
     max-width: 760px;
     line-height: 1.6;
-}
-
-.guest-welcome {
-    background: linear-gradient(
-        135deg,
-        var(--bg-bot),
-        rgba(236,72,153,0.08)
-    );
 }
 
 .welcome-badge {
@@ -592,12 +600,21 @@ body {
     </div>
 
     {% if user.is_authenticated %}
+    <!-- LOGGED IN: Show History -->
     <div class="history-section">
         <div class="sidebar-section-title">History</div>
         <div class="chat-list" id="chatList"></div>
     </div>
+    {% else %}
+    <!-- ANONYMOUS: Show prompt to login/signup -->
+    <div class="anon-sidebar-prompt">
+        🔒 <a href="{% url 'login' %}">Login</a> or
+        <a href="{% url 'signup' %}">Create account</a><br>
+        to save your conversations.
+    </div>
     {% endif %}
 
+    <!-- FAQ Section (shown to everyone) -->
     <div class="faq-section">
         <div class="sidebar-section-title">
             Frequently Asked Questions
@@ -673,7 +690,7 @@ body {
                         {% endif %}
 
                         <button onclick="toggleTheme(); closeDropdown();">
-                            🌙
+                            🌙 Dark / Light
                         </button>
 
                     </div>
@@ -789,7 +806,7 @@ function toggleTheme() {
 }
 
 /* =========================
-   WELCOME UI
+   WELCOME UI (IMPROVED)
 ========================= */
 function clearChatBox() {
 
@@ -797,55 +814,42 @@ function clearChatBox() {
         "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
 
     if (isAuthenticated) {
-
+        // Clean, professional welcome (like first image)
         document.getElementById("chatBox").innerHTML = `
-            <div class="welcome-title">
-                    👋 Welcome to SafeChoice AI
-                </div>
-
+            <div class="welcome">
+                <div class="welcome-header">Welcome to SafeChoice AI</div>
                 <div class="welcome-text">
-                    I’m your reproductive health assistant.
-
-                    I can help you with:
-                    • contraceptive methods
-                    • side effects
-                    • family planning guidance
-                    • nearby health facilities
-
-                    You can chat anonymously or create an account to save your history.
+                    I'm your reproductive health assistant. I can help you with:
+                </div>
+                <div class="welcome-features">
+                    <div class="feature-pill">Contraceptive methods</div>
+                    <div class="feature-pill">Side effects</div>
+                    <div class="feature-pill">Nearby health facilities</div>
+                </div>
+                <div class="guest-note">
+                    Your conversations are saved. You can access your chat history from the sidebar.
+                </div>
             </div>
         `;
-
     } else {
-
+        // Anonymous welcome with call to action
         document.getElementById("chatBox").innerHTML = `
             <div class="welcome guest-welcome">
-
-                <div class="welcome-badge">
-                    Anonymous Chat Available
-                </div>
-
-                <div class="welcome-header">
-                    Hello!I am SafeChoice AI
-                </div>
-
+                <div class="welcome-badge">Anonymous Chat Available</div>
+                <div class="welcome-header">Hello! I'm SafeChoice AI</div>
                 <div class="welcome-text">
-                    I am an AI contraceptive chatbot that helps you learn about:
+                    I'm an AI contraceptive chatbot that helps you learn about:
                 </div>
-
                 <div class="welcome-features">
                     <div class="feature-pill">Contraceptive Methods</div>
                     <div class="feature-pill">Side Effects</div>
                     <div class="feature-pill">Nearby Health Facilities</div>
                 </div>
-
                 <div class="guest-note">
                     You can ask questions anonymously without creating an account.
                     <br><br>
-                    Create an account if you want to save your conversations
-                    and access chat history.
+                    <strong>Create an account</strong> to save your conversations and access chat history.
                 </div>
-
             </div>
         `;
     }
